@@ -64,6 +64,10 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
         <button type="button" className="botao botao-secundario nao-imprimir" onClick={() => window.print()}>
           Imprimir cardápio
         </button>
+        <p className="subtitulo so-imprimir" style={{ fontSize: '0.85rem' }}>
+          Aponte a câmera do celular para o QR code ao lado do item para pagar via PIX. O valor de
+          uma unidade já vem preenchido; ajuste no app do banco se levar mais.
+        </p>
       </header>
 
       {itens.length === 0 && (
@@ -82,7 +86,20 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
                 key={item.listagem_id}
                 className={`cardapio-item ${item.disponivel ? '' : 'indisponivel'}`.trim()}
               >
-                <div>
+                {item.vendedor_pix && (
+                  <div className="cardapio-item-qr" aria-hidden="true">
+                    <QrCodeSvg
+                      valor={gerarPayloadPix({
+                        chave: item.vendedor_pix,
+                        nomeRecebedor: item.vendedor_nome,
+                        valor: item.preco_atual,
+                      })}
+                      rotulo={`QR code PIX de ${item.item_nome}`}
+                      largura={96}
+                    />
+                  </div>
+                )}
+                <div className="cardapio-item-info">
                   <strong>{item.item_nome}</strong>
                   {!item.disponivel && <span className="etiqueta etiqueta-alerta" style={{ marginLeft: 8 }}>esgotado</span>}
                   {item.item_descricao && (
