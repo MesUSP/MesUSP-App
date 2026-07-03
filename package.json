@@ -1,0 +1,26 @@
+{
+  "name": "mesusp-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Frontend web do MesUSP / UniMesinha — controle de mesinhas universitárias.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build && node scripts/build-sw.mjs",
+    "preview": "vite preview",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "workbox-build": "^7.3.0"
+  }
+}
