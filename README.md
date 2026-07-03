@@ -4,26 +4,33 @@ Frontend web do MesUSP, plataforma de controle de estoque, vendas e *slippage* p
 
 ## Visão geral
 
-Esta aplicação React será a interface para as operações diárias do MesUSP. Ela consumirá os serviços do Supabase mantidos no repositório `MesUSP-Backend`.
+Esta aplicação React (Vite + TypeScript) é a interface para as operações diárias do MesUSP. Ela consome os serviços do Supabase mantidos no repositório `MesUSP-Backend`.
 
-Entre os fluxos previstos estão:
+Fluxos implementados:
 
-- cadastro e consulta de produtos;
-- entrada, saída e inventário de estoque;
-- registro e acompanhamento de vendas;
-- apuração de *slippage* e divergências;
-- gestão de organizações, pontos de venda e permissões;
-- visualização de indicadores operacionais.
+- cadastro, login e perfil com chave PIX única por usuário;
+- criação e administração de mesinhas centralizadas e descentralizadas;
+- convite e remoção de colaboradores;
+- itens e listagens (o mesmo item pode estar em várias mesinhas, com preço e estoque independentes);
+- reposições com custo de compra, vendas manuais, perdas e histórico de preços;
+- confirmação manual de pagamento — vendas não confirmadas contam como *slippage*;
+- relatórios de receita, gastos e *slippage* por dia, semana e mês;
+- cardápio digital público com QR code e pagamento via PIX do vendedor;
+- impressão do QR code, do cardápio e de uma folha A4 com produtos, preços e QR do PIX;
+- sincronização unidirecional com a planilha do Google vinculada à mesinha;
+- PWA instalável com service worker gerado pelo Workbox.
+
+Conforme os requisitos de arquitetura, não há bibliotecas externas de interface, estado, roteamento ou HTTP: o roteador, o gerador de QR code (ISO 18004) e o payload PIX (BR Code) são implementados em `src/router.tsx`, `src/lib/qrcode.ts` e `src/lib/pix.ts`. As únicas dependências de runtime são `react`, `react-dom` e `@supabase/supabase-js`; o Workbox é usado apenas no build do service worker.
 
 ## Requisitos
 
 - Node.js em versão LTS;
-- npm, pnpm ou Yarn, conforme o gerenciador definido no projeto;
+- npm;
 - uma instância do backend MesUSP no Supabase.
 
 ## Configuração local
 
-Após a inicialização do projeto React, copie o arquivo de exemplo de variáveis de ambiente e preencha as credenciais públicas da sua instância Supabase:
+Copie o arquivo de exemplo de variáveis de ambiente e preencha as credenciais públicas da sua instância Supabase:
 
 ```bash
 cp .env.example .env.local
@@ -42,6 +49,15 @@ Instale as dependências e inicie o ambiente de desenvolvimento usando os script
 npm install
 npm run dev
 ```
+
+## Scripts
+
+| Comando | Descrição |
+| --- | --- |
+| `npm run dev` | ambiente de desenvolvimento com o Vite |
+| `npm run build` | checagem de tipos, build de produção e geração do service worker |
+| `npm run preview` | serve o build de produção localmente |
+| `npm run icons` | regenera os ícones PNG do PWA em `public/icons` |
 
 ## Integração com o backend
 
