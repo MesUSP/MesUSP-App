@@ -18,7 +18,8 @@ interface EstadoAutenticacao {
   perfil: Profile | null;
   carregando: boolean;
   entrar: (email: string, senha: string) => Promise<void>;
-  cadastrar: (nome: string, email: string, senha: string) => Promise<void>;
+  /** Retorna true quando a conta foi criada mas ainda precisa de confirmação por e-mail. */
+  cadastrar: (nome: string, email: string, senha: string) => Promise<boolean>;
   sair: () => Promise<void>;
   atualizarPerfil: (dados: { nome?: string; pix_key?: string | null }) => Promise<void>;
 }
@@ -63,12 +64,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const cadastrar = useCallback(async (nome: string, email: string, senha: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password: senha,
-      options: { data: { nome } },
+      options: {
+        data: { nome },
+        // O link de confirmação deve voltar para o domínio em uso
+        // (o Site URL do projeto também precisa apontar para produção).
+        emailRedirectTo: window.location.origin,
+      },
     });
     if (error) throw new Error(traduzirErroAuth(error.message));
+    // Sem sessão na resposta = confirmação de e-mail pendente.
+    return data.session === null;
   }, []);
 
   const sair = useCallback(async () => {
@@ -106,6 +114,9 @@ export function useAuth(): EstadoAutenticacao {
 
 function traduzirErroAuth(mensagem: string): string {
   if (mensagem.includes('Invalid login credentials')) return 'E-mail ou senha incorretos.';
+  if (mensagem.includes('Email not confirmed')) {
+    return 'Confirme seu e-mail antes de entrar. Procure a mensagem na caixa de entrada (ou no spam).';
+  }
   if (mensagem.includes('already registered')) return 'Este e-mail já está cadastrado.';
   if (mensagem.includes('at least 6 characters')) return 'A senha deve ter ao menos 6 caracteres.';
   return mensagem;

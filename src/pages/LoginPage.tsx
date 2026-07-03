@@ -8,17 +8,27 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
   async function aoEnviar(evento: FormEvent) {
     evento.preventDefault();
     setErro(null);
+    setAviso(null);
     setEnviando(true);
     try {
       if (modo === 'entrar') {
         await entrar(email, senha);
       } else {
-        await cadastrar(nome.trim(), email, senha);
+        const precisaConfirmar = await cadastrar(nome.trim(), email, senha);
+        if (precisaConfirmar) {
+          setModo('entrar');
+          setSenha('');
+          setAviso(
+            `Conta criada! Enviamos um link de confirmação para ${email}. ` +
+              'Abra o e-mail (confira também o spam) e confirme a conta antes de entrar.',
+          );
+        }
       }
     } catch (excecao) {
       setErro(excecao instanceof Error ? excecao.message : String(excecao));
@@ -96,6 +106,7 @@ export function LoginPage() {
           </div>
 
           {erro && <p className="mensagem-erro">{erro}</p>}
+          {aviso && <p className="mensagem-sucesso">{aviso}</p>}
 
           <button type="submit" className="botao" disabled={enviando}>
             {enviando ? 'Aguarde…' : modo === 'entrar' ? 'Entrar' : 'Criar conta'}
