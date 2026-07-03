@@ -1,0 +1,2 @@
+# SPA: todas as rotas caem no index.html (necessário para /cardapio/:id etc.)
+/*  /index.html  200

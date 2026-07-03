@@ -1,0 +1,15 @@
+# Configuração de build do Netlify (usada quando o site é conectado ao repo).
+# As variáveis VITE_SUPABASE_URL e VITE_SUPABASE_PUBLISHABLE_KEY devem ser
+# definidas no painel do site (são públicas, mas ficam fora do repositório).
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
