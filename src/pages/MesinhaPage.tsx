@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useRoteador } from '../router';
 import { QrCodeSvg } from '../components/QrCodeSvg';
 import { formatarMoeda } from '../lib/format';
+import { extrairIdPlanilha, montarLinkPlanilha } from '../lib/googleSheets';
 import type { Item, Listagem, Mesinha, MesinhaMembro } from '../types';
 
 type Aba = 'itens' | 'colaboradores' | 'cardapio' | 'configuracoes';
@@ -499,7 +500,7 @@ function AbaConfiguracoes({
   const [nome, setNome] = useState(mesinha.nome);
   const [tipo, setTipo] = useState(mesinha.tipo);
   const [descricao, setDescricao] = useState(mesinha.descricao);
-  const [planilhaId, setPlanilhaId] = useState(mesinha.planilha_id ?? '');
+  const [linkPlanilha, setLinkPlanilha] = useState(montarLinkPlanilha(mesinha.planilha_id));
   const [mensagem, setMensagem] = useState<Mensagem | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
@@ -527,7 +528,7 @@ function AbaConfiguracoes({
           nome: nome.trim(),
           tipo,
           descricao: descricao.trim(),
-          planilha_id: planilhaId.trim() || null,
+          planilha_id: linkPlanilha.trim() ? extrairIdPlanilha(linkPlanilha) : null,
         }),
       'Mesinha atualizada.',
     );
@@ -577,16 +578,19 @@ function AbaConfiguracoes({
             />
           </div>
           <div className="campo">
-            <label htmlFor="editar-planilha">ID da planilha do Google (sincronização)</label>
+            <label htmlFor="editar-planilha">Link de compartilhamento do Google Planilhas</label>
             <input
               id="editar-planilha"
-              value={planilhaId}
-              onChange={(e) => setPlanilhaId(e.target.value)}
-              placeholder="trecho entre /d/ e /edit na URL da planilha"
+              value={linkPlanilha}
+              onChange={(e) => setLinkPlanilha(e.target.value)}
+              placeholder="https://docs.google.com/spreadsheets/d/.../edit?usp=sharing"
+              inputMode="url"
+              autoCapitalize="none"
+              spellCheck={false}
             />
             <p className="subtitulo" style={{ fontSize: '0.82rem' }}>
-              A planilha deve pertencer à organização responsável e estar compartilhada com a conta
-              de serviço configurada no backend.
+              No Google Planilhas, abra “Compartilhar” e escolha “Qualquer pessoa com o link” como
+              “Editor”. Depois, copie e cole o link aqui; não é necessário extrair o ID.
             </p>
           </div>
           {mensagem && (

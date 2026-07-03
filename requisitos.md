@@ -129,6 +129,8 @@ estoque atual = reposições − vendas − perdas registradas − slippage
 * **RF-SYNC-02** A planilha deve pertencer ao centro acadêmico, atlética ou organização responsável pela mesinha.
 * **RF-SYNC-03** A sincronização deve ser unidirecional: a aplicação é a fonte de verdade e envia dados para a planilha.
 * **RF-SYNC-04** A sincronização deve ocorrer em ambiente confiável por meio de Supabase Edge Functions e conta de serviço do Google. As credenciais não podem ser expostas no front-end.
+* **RF-SYNC-05** O proprietário deve poder vincular a planilha colando seu link de compartilhamento, sem precisar localizar ou extrair manualmente o ID da URL.
+* **RF-SYNC-06** A planilha vinculada deve estar compartilhada como “Qualquer pessoa com o link” com papel de editor. A interface deve orientar o proprietário sobre essa configuração.
 
 ## 5. Requisitos não funcionais
 
@@ -136,7 +138,7 @@ estoque atual = reposições − vendas − perdas registradas − slippage
 
 * **RNF-ARCH-01** O front-end deve utilizar React com TypeScript e Vite.
 * **RNF-ARCH-02** Não devem ser utilizadas bibliotecas externas de interface, estado, roteamento ou HTTP. Devem ser usados `fetch` nativo, Context do React e recursos próprios do React.
-* **RNF-ARCH-03** São permitidas as bibliotecas Workbox e `@supabase/supabase-js`.
+* **RNF-ARCH-03** São permitidas as bibliotecas Workbox, `@supabase/supabase-js` e `qrcode`, esta última exclusivamente para codificação confiável dos QR codes.
 * **RNF-ARCH-04** O back-end deve utilizar Supabase, com Postgres, RLS, Supabase Auth e Edge Functions para operações sensíveis.
 
 ### 5.2 PWA e responsividade
@@ -156,8 +158,8 @@ estoque atual = reposições − vendas − perdas registradas − slippage
 
 ## 6. Modelo de dados proposto
 
-* **`profiles`**: `id`, `nome`, `pix_key`, `criado_em`.
-* **`mesinhas`**: `id`, `proprietario_id`, `nome`, `tipo`, `descricao`, `latitude`, `longitude`, `ativo`, `criado_em`.
+* **`profiles`**: `id`, `nome`, `email`, `pix_key`, `criado_em`.
+* **`mesinhas`**: `id`, `proprietario_id`, `nome`, `tipo`, `descricao`, `latitude`, `longitude`, `ativo`, `arquivada`, `planilha_id`, `criado_em`.
 * **`mesinha_membros`**: `mesinha_id`, `usuario_id`, `papel`, `status`, `criado_em`.
 * **`itens`**: `id`, `dono_id`, `nome`, `categoria`, `descricao`, `foto_url`.
 * **`listagens`**: `id`, `item_id`, `mesinha_id`, `dono_id`, `preco_atual`, `estoque_atual`, `status`, `criado_em`.

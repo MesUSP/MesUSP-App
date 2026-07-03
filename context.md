@@ -49,6 +49,14 @@ públicas; a `service_role` nunca entra no frontend.
   para `index.html` — necessário para `/cardapio/:id` e demais rotas.
 - **Autorização fica no banco (RLS)**: a camada `src/lib/api.ts` confia nas
   políticas do backend; o frontend não filtra dados por segurança, só por UX.
+- **Vínculo com Google Planilhas**: o proprietário cola o link completo de uma
+  planilha compartilhada como “Qualquer pessoa com o link → Editor”.
+  `src/lib/googleSheets.ts` valida que o link pertence a `docs.google.com`,
+  extrai o ID e mantém compatibilidade com IDs já cadastrados. O banco continua
+  armazenando somente `mesinhas.planilha_id`, portanto não houve migração.
+- **Autenticação do Google continua no backend**: compartilhamento por link não
+  torna a API de escrita anônima. A Edge Function usa a conta de serviço global
+  do MesUSP, sem expor credenciais ou exigir que o usuário saiba o e-mail dela.
 
 ## Fluxo de autenticação
 
@@ -69,3 +77,6 @@ públicas; a `service_role` nunca entra no frontend.
   máquina nova: `sudo dnf install nodejs npm`, depois `npm install`.
 - O build embute as variáveis `VITE_*` no bundle: depois de trocar `.env.local`
   é preciso rebuildar.
+- A sincronização falha com uma orientação específica quando a planilha não
+  está compartilhada como editável por qualquer pessoa com o link. A exposição
+  do link concede edição a quem o possuir; essa é uma decisão explícita do MVP.

@@ -20,7 +20,13 @@ Fluxos implementados:
 - sincronização unidirecional com a planilha do Google vinculada à mesinha;
 - PWA instalável com service worker gerado pelo Workbox.
 
-Conforme os requisitos de arquitetura, não há bibliotecas externas de interface, estado, roteamento ou HTTP: o roteador, o gerador de QR code (ISO 18004) e o payload PIX (BR Code) são implementados em `src/router.tsx`, `src/lib/qrcode.ts` e `src/lib/pix.ts`. As únicas dependências de runtime são `react`, `react-dom` e `@supabase/supabase-js`; o Workbox é usado apenas no build do service worker.
+Conforme os requisitos de arquitetura, não há bibliotecas externas de interface, estado, roteamento ou HTTP. O roteador e o payload PIX (BR Code) são implementados em `src/router.tsx` e `src/lib/pix.ts`. A codificação ISO 18004 usa a biblioteca `qrcode`, encapsulada por `src/lib/qrcode.ts`, depois que a implementação própria se mostrou incompatível com leitores reais. O Workbox é usado apenas no build do service worker.
+
+## Sincronização com Google Planilhas
+
+Na aba **Configurações** de uma mesinha, o proprietário pode colar diretamente o link de compartilhamento de uma planilha. Antes disso, no Google Planilhas, deve selecionar **Compartilhar → Acesso geral → Qualquer pessoa com o link → Editor**. A aplicação valida o domínio e o formato do link e extrai o ID internamente.
+
+O botão **Sincronizar planilha agora** envia listagens, reposições, vendas e perdas por meio da Edge Function `sync-planilha`. A aplicação é a fonte de verdade e substitui o conteúdo dessas quatro abas. Embora o arquivo esteja acessível pelo link, as chamadas de escrita à API do Google continuam autenticadas no backend; nenhuma credencial Google é enviada ao navegador.
 
 ## Requisitos
 
@@ -56,6 +62,7 @@ npm run dev
 | --- | --- |
 | `npm run dev` | ambiente de desenvolvimento com o Vite |
 | `npm run build` | checagem de tipos, build de produção e geração do service worker |
+| `npm test` | testes unitários com o executor nativo do Node.js |
 | `npm run preview` | serve o build de produção localmente |
 | `npm run icons` | regenera os ícones PNG do PWA em `public/icons` |
 
