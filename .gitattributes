@@ -1,0 +1,62 @@
+# Texto: normalize no repositório e use o fim de linha nativo no checkout.
+* text=auto
+
+# Código e configuração devem permanecer com LF.
+*.js       text eol=lf
+*.jsx      text eol=lf
+*.ts       text eol=lf
+*.tsx      text eol=lf
+*.css      text eol=lf
+*.scss     text eol=lf
+*.html     text eol=lf
+*.json     text eol=lf
+*.jsonc    text eol=lf
+*.yaml     text eol=lf
+*.yml      text eol=lf
+*.md       text eol=lf
+*.graphql  text eol=lf
+*.gql      text eol=lf
+*.sh       text eol=lf
+*.env.example text eol=lf
+
+# Scripts nativos do Windows.
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.ps1      text eol=crlf
+
+# Imagens e ícones.
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.webp     binary
+*.avif     binary
+*.ico      binary
+*.bmp      binary
+*.tif      binary
+*.tiff     binary
+
+# Fontes.
+*.woff     binary
+*.woff2    binary
+*.ttf      binary
+*.otf      binary
+*.eot      binary
+
+# Documentos, mídia e arquivos compactados.
+*.pdf      binary
+*.mp3      binary
+*.mp4      binary
+*.webm     binary
+*.ogg      binary
+*.wav      binary
+*.zip      binary
+*.gz       binary
+*.tgz      binary
+*.7z       binary
+*.rar      binary
+
+# Evite merges automáticos em lockfiles gerados.
+package-lock.json -merge
+pnpm-lock.yaml    -merge
+yarn.lock         -merge
