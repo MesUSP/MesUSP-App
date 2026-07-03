@@ -13,7 +13,13 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
   const [itens, setItens] = useState<CardapioItem[]>([]);
   const [erro, setErro] = useState<string | null>(null);
   const [itemPix, setItemPix] = useState<CardapioItem | null>(null);
+  const [quantidade, setQuantidade] = useState(1);
   const dialogoRef = useRef<HTMLDialogElement>(null);
+
+  function abrirPagamento(item: CardapioItem) {
+    setQuantidade(1);
+    setItemPix(item);
+  }
 
   useEffect(() => {
     obterCardapio(mesinhaId)
@@ -48,12 +54,13 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
   }
 
   const categorias = [...new Set(itens.map((item) => item.categoria))];
+  const total = itemPix ? Math.round(itemPix.preco_atual * quantidade * 100) / 100 : 0;
   const payloadPix =
     itemPix?.vendedor_pix &&
     gerarPayloadPix({
       chave: itemPix.vendedor_pix,
       nomeRecebedor: itemPix.vendedor_nome,
-      valor: itemPix.preco_atual,
+      valor: total,
     });
 
   return (
@@ -118,7 +125,7 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
                       type="button"
                       className="botao botao-pequeno nao-imprimir"
                       style={{ marginTop: '0.3rem' }}
-                      onClick={() => setItemPix(item)}
+                      onClick={() => abrirPagamento(item)}
                     >
                       Pagar com PIX
                     </button>
@@ -134,7 +141,33 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
           <>
             <h2>{itemPix.item_nome}</h2>
             <p className="subtitulo">
-              {formatarMoeda(itemPix.preco_atual)} para {itemPix.vendedor_nome}
+              {formatarMoeda(itemPix.preco_atual)} cada · para {itemPix.vendedor_nome}
+            </p>
+            <div className="seletor-quantidade">
+              <button
+                type="button"
+                className="botao botao-secundario"
+                aria-label="Diminuir quantidade"
+                disabled={quantidade <= 1}
+                onClick={() => setQuantidade((atual) => Math.max(1, atual - 1))}
+              >
+                −
+              </button>
+              <span className="valor-quantidade" aria-live="polite">
+                {quantidade}
+              </span>
+              <button
+                type="button"
+                className="botao botao-secundario"
+                aria-label="Aumentar quantidade"
+                disabled={quantidade >= 99}
+                onClick={() => setQuantidade((atual) => Math.min(99, atual + 1))}
+              >
+                +
+              </button>
+            </div>
+            <p style={{ fontWeight: 700, fontSize: '1.15rem', margin: '0 0 0.5rem' }}>
+              Total: {formatarMoeda(total)}
             </p>
             <QrCodeSvg valor={payloadPix} rotulo="QR code de pagamento PIX" largura={240} />
             <p className="pix-copia-cola">{payloadPix}</p>
