@@ -59,3 +59,6 @@ temp/
 *.tmp
 *.bak
 *.orig
+
+# Local Netlify folder
+.netlify
