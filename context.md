@@ -69,3 +69,16 @@ públicas; a `service_role` nunca entra no frontend.
   máquina nova: `sudo dnf install nodejs npm`, depois `npm install`.
 - O build embute as variáveis `VITE_*` no bundle: depois de trocar `.env.local`
   é preciso rebuildar.
+- **Deploy no Netlify é manual e sensível a `process.env`**: não há CI de Git.
+  Use `npm run build && netlify deploy --prod --dir=dist --no-build`. Sem
+  `--no-build`, o Netlify rebuilda injetando as vars do painel no `process.env`,
+  que o **Vite prioriza sobre o `.env.local`**; um valor divergente de
+  `VITE_GOOGLE_CLIENT_ID` no painel já causou `Erro 401: invalid_client`.
+  Mantenha painel e `.env.local` iguais (`netlify env:list` / `env:set`). Passo
+  a passo no README.
+- **Consentimento OAuth do Google em modo *Testing***: só contas adicionadas
+  como *test users* conseguem conectar (senão, `Erro 403: access_denied`), e os
+  refresh tokens expiram em 7 dias. Como o app usa só escopos não sensíveis
+  (`drive.file`, `userinfo.email`), dá para **publicar em produção sem
+  verificação do Google** (OAuth consent screen → *Publish app*), o que remove o
+  limite de testadores e a expiração semanal.
