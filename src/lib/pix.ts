@@ -26,13 +26,13 @@ export interface DadosPix {
   cidade?: string;
   /** Valor em reais; quando omitido, o pagador digita o valor. */
   valor?: number;
-  identificador?: string;
   /**
-   * Texto livre (subcampo 02 do campo 62) exibido ao pagador antes de
-   * confirmar o pagamento — ideal para indicar item e mesinha, já que o
-   * txid (subcampo 05) aceita só alfanumérico e serve para conciliação.
+   * ID da transação (subcampo 05 do campo 62, o único que o Manual do BR
+   * Code do Bacen documenta nesse template). Só alfanumérico, até 25
+   * caracteres — é o que aparece como "identificador" no app do pagador e
+   * serve para conciliar o recebimento.
    */
-  infoAdicional?: string;
+  identificador?: string;
 }
 
 export function gerarPayloadPix(dados: DadosPix): string {
@@ -40,9 +40,6 @@ export function gerarPayloadPix(dados: DadosPix): string {
   const cidade =
     removerAcentos(dados.cidade ?? 'SAO PAULO').toUpperCase().slice(0, 15).trim() || 'SAO PAULO';
   const identificador = (dados.identificador ?? '***').replace(/[^A-Za-z0-9*]/g, '').slice(0, 25) || '***';
-  const infoAdicional = dados.infoAdicional
-    ? removerAcentos(dados.infoAdicional).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 72)
-    : '';
 
   const contaMerchant = campo('00', 'br.gov.bcb.pix') + campo('01', dados.chave.trim());
 
@@ -54,12 +51,11 @@ export function gerarPayloadPix(dados: DadosPix): string {
   if (dados.valor && dados.valor > 0) {
     payload += campo('54', dados.valor.toFixed(2));
   }
-  const dadosAdicionais = (infoAdicional ? campo('02', infoAdicional) : '') + campo('05', identificador);
   payload +=
     campo('58', 'BR') +
     campo('59', nome) +
     campo('60', cidade) +
-    campo('62', dadosAdicionais) +
+    campo('62', campo('05', identificador)) +
     '6304';
 
   return payload + crc16(payload);

@@ -8,6 +8,15 @@ import { QrCodeSvg } from '../components/QrCodeSvg';
 import { formatarMoeda } from '../lib/format';
 import type { CardapioItem, CardapioMesinha } from '../types';
 
+// Monta o txid (subcampo 05 do BR Code): só alfanumérico e até 25
+// caracteres, então cabe pouco — prioriza o item, que é o que o vendedor
+// mais precisa diferenciar num extrato com vários itens de mesmo preço.
+function identificadorPix(mesinhaNome: string, itemNome: string): string {
+  const alfanumerico = (texto: string) =>
+    texto.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, '');
+  return `${alfanumerico(itemNome)}${alfanumerico(mesinhaNome)}`.slice(0, 25);
+}
+
 export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
   const [mesinha, setMesinha] = useState<CardapioMesinha | null>(null);
   const [itens, setItens] = useState<CardapioItem[]>([]);
@@ -61,7 +70,7 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
       chave: itemPix.vendedor_pix,
       nomeRecebedor: itemPix.vendedor_nome,
       valor: total,
-      infoAdicional: `${mesinha.nome} - ${quantidade}x ${itemPix.item_nome}`,
+      identificador: identificadorPix(mesinha.nome, itemPix.item_nome),
     });
 
   return (
@@ -101,7 +110,7 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
                         chave: item.vendedor_pix,
                         nomeRecebedor: item.vendedor_nome,
                         valor: item.preco_atual,
-                        infoAdicional: `${mesinha.nome} - ${item.item_nome}`,
+                        identificador: identificadorPix(mesinha.nome, item.item_nome),
                       })}
                       rotulo={`QR code PIX de ${item.item_nome}`}
                       largura={96}
