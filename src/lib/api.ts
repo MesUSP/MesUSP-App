@@ -386,11 +386,8 @@ export async function obterAccessTokenGoogle(): Promise<string> {
   return data.access_token as string;
 }
 
-/** Revoga a conexão removendo o refresh token guardado (RLS: só a própria linha). */
+/** Revoga a conexão removendo o refresh token guardado (RPC security definer). */
 export async function desconectarGoogle(): Promise<void> {
-  const { error } = await supabase
-    .from('google_credenciais')
-    .delete()
-    .eq('usuario_id', (await supabase.auth.getUser()).data.user?.id ?? '');
+  const { error } = await supabase.rpc('desconectar_google');
   if (error) throw new Error(error.message);
 }

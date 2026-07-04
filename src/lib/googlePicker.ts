@@ -49,6 +49,18 @@ function apiKey(): string {
   return chave;
 }
 
+// Número do projeto (prefixo do client_id). Sem o setAppId, o Picker deixa
+// escolher o arquivo mas o drive.file NÃO concede acesso persistente ao app, e
+// a Sheets API responde 404 depois. Com ele, o app retém acesso ao arquivo.
+function appId(): string {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+  const numero = clientId?.split('-')[0];
+  if (!numero) {
+    throw new Error('Configure VITE_GOOGLE_CLIENT_ID no .env.local para usar o Google Picker.');
+  }
+  return numero;
+}
+
 /**
  * Abre o Google Picker restrito a planilhas. Resolve com o arquivo escolhido ou
  * `null` se o usuário cancelar. O `accessToken` (escopo drive.file) autoriza o
@@ -66,6 +78,7 @@ export async function escolherPlanilha(accessToken: string): Promise<PlanilhaEsc
       const visao = new picker.DocsView(picker.ViewId.SPREADSHEETS);
 
       const instancia = new picker.PickerBuilder()
+        .setAppId(appId())
         .setOAuthToken(accessToken)
         .setDeveloperKey(apiKey())
         .setTitle('Escolha a planilha da organização')
