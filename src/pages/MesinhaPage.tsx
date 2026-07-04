@@ -3,9 +3,12 @@ import {
   atualizarMesinha,
   convidarColaborador,
   criarListagem,
+  desconectarGoogle,
   listarListagensDaMesinha,
   listarMembros,
   listarMeusItens,
+  obterAccessTokenGoogle,
+  obterConexaoGoogle,
   obterMesinha,
   removerColaborador,
   sincronizarPlanilha,
@@ -14,7 +17,9 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useRoteador } from '../router';
 import { QrCodeSvg } from '../components/QrCodeSvg';
 import { formatarMoeda } from '../lib/format';
-import type { Item, Listagem, Mesinha, MesinhaMembro } from '../types';
+import { iniciarConexaoGoogle } from '../lib/google';
+import { escolherPlanilha } from '../lib/googlePicker';
+import type { ConexaoGoogle, Item, Listagem, Mesinha, MesinhaMembro } from '../types';
 
 type Aba = 'itens' | 'colaboradores' | 'cardapio' | 'configuracoes';
 
@@ -503,6 +508,20 @@ function AbaConfiguracoes({
   const [mensagem, setMensagem] = useState<Mensagem | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [sincronizando, setSincronizando] = useState(false);
+  const [conexao, setConexao] = useState<ConexaoGoogle | null>(null);
+  const [escolhendo, setEscolhendo] = useState(false);
+
+  const recarregarConexao = useCallback(async () => {
+    try {
+      setConexao(await obterConexaoGoogle());
+    } catch {
+      setConexao(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void recarregarConexao();
+  }, [recarregarConexao]);
 
   async function executar(acao: () => Promise<void>, sucesso: string) {
     setMensagem(null);
@@ -527,7 +546,6 @@ function AbaConfiguracoes({
           nome: nome.trim(),
           tipo,
           descricao: descricao.trim(),
-          planilha_id: planilhaId.trim() || null,
         }),
       'Mesinha atualizada.',
     );
@@ -538,6 +556,29 @@ function AbaConfiguracoes({
     setSincronizando(true);
     await executar(() => sincronizarPlanilha(mesinha.id), 'Planilha sincronizada com sucesso.');
     setSincronizando(false);
+  }
+
+  // Vincula a planilha pelo Google Picker: com o escopo drive.file, é a escolha
+  // no Picker que autoriza o app a escrever nela (não basta colar o ID).
+  async function aoEscolherPlanilha() {
+    setMensagem(null);
+    setEscolhendo(true);
+    try {
+      const token = await obterAccessTokenGoogle();
+      const escolhida = await escolherPlanilha(token);
+      if (escolhida) {
+        await atualizarMesinha(mesinha.id, { planilha_id: escolhida.id });
+        setPlanilhaId(escolhida.id);
+        setMensagem({ tipo: 'sucesso', texto: `Planilha “${escolhida.nome}” vinculada.` });
+        await aoAtualizar();
+      }
+    } catch (excecao) {
+      setMensagem({
+        tipo: 'erro',
+        texto: excecao instanceof Error ? excecao.message : String(excecao),
+      });
+    }
+    setEscolhendo(false);
   }
 
   return (
@@ -576,19 +617,6 @@ function AbaConfiguracoes({
               rows={2}
             />
           </div>
-          <div className="campo">
-            <label htmlFor="editar-planilha">ID da planilha do Google (sincronização)</label>
-            <input
-              id="editar-planilha"
-              value={planilhaId}
-              onChange={(e) => setPlanilhaId(e.target.value)}
-              placeholder="trecho entre /d/ e /edit na URL da planilha"
-            />
-            <p className="subtitulo" style={{ fontSize: '0.82rem' }}>
-              A planilha deve pertencer à organização responsável e estar compartilhada com a conta
-              de serviço configurada no backend.
-            </p>
-          </div>
           {mensagem && (
             <p className={mensagem.tipo === 'erro' ? 'mensagem-erro' : 'mensagem-sucesso'}>
               {mensagem.texto}
@@ -598,16 +626,81 @@ function AbaConfiguracoes({
             <button type="submit" className="botao" disabled={salvando}>
               {salvando ? 'Salvando…' : 'Salvar alterações'}
             </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="cartao">
+        <h2>Sincronização com Google Planilhas</h2>
+        <p className="subtitulo">
+          A sincronização é unidirecional: o MesUSP é a fonte de verdade e sobrescreve as abas
+          Listagens, Reposições, Vendas e Perdas da planilha. A escrita usa a sua conta Google — não
+          há conta de serviço, e você pode revogar o acesso quando quiser.
+        </p>
+        {conexao ? (
+          <p className="mensagem-sucesso">
+            Conta Google conectada{conexao.email_google ? ` (${conexao.email_google})` : ''}.
+          </p>
+        ) : (
+          <p className="subtitulo">Nenhuma conta Google conectada.</p>
+        )}
+        {conexao && (
+          <p className="subtitulo" style={{ fontSize: '0.82rem' }}>
+            {planilhaId ? (
+              <>
+                Planilha vinculada: <code>{planilhaId}</code>
+              </>
+            ) : (
+              'Nenhuma planilha vinculada. Escolha a planilha da organização pelo Google Picker.'
+            )}
+          </p>
+        )}
+        <div className="linha-flex">
+          {conexao ? (
+            <button
+              type="button"
+              className="botao botao-fantasma"
+              onClick={() =>
+                void executar(async () => {
+                  await desconectarGoogle();
+                  await recarregarConexao();
+                }, 'Conta Google desconectada.')
+              }
+            >
+              Desconectar conta Google
+            </button>
+          ) : (
             <button
               type="button"
               className="botao botao-secundario"
-              disabled={sincronizando || !mesinha.planilha_id}
-              onClick={() => void aoSincronizar()}
+              onClick={() => iniciarConexaoGoogle(window.location.pathname)}
             >
-              {sincronizando ? 'Sincronizando…' : 'Sincronizar planilha agora'}
+              Conectar conta Google
             </button>
-          </div>
-        </form>
+          )}
+          <button
+            type="button"
+            className="botao botao-secundario"
+            disabled={escolhendo || !conexao}
+            onClick={() => void aoEscolherPlanilha()}
+          >
+            {escolhendo ? 'Abrindo…' : planilhaId ? 'Trocar planilha' : 'Escolher planilha'}
+          </button>
+          <button
+            type="button"
+            className="botao"
+            disabled={sincronizando || !mesinha.planilha_id || !conexao}
+            onClick={() => void aoSincronizar()}
+          >
+            {sincronizando ? 'Sincronizando…' : 'Sincronizar planilha agora'}
+          </button>
+        </div>
+        {!conexao && (
+          <p className="subtitulo" style={{ fontSize: '0.82rem' }}>
+            Conecte uma conta Google com acesso de edição à planilha da organização para vinculá-la e
+            sincronizar.
+          </p>
+        )}
       </div>
 
       <div className="cartao">
