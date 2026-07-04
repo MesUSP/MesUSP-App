@@ -61,6 +61,7 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
       chave: itemPix.vendedor_pix,
       nomeRecebedor: itemPix.vendedor_nome,
       valor: total,
+      infoAdicional: `${mesinha.nome} - ${quantidade}x ${itemPix.item_nome}`,
     });
 
   return (
@@ -100,6 +101,7 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
                         chave: item.vendedor_pix,
                         nomeRecebedor: item.vendedor_nome,
                         valor: item.preco_atual,
+                        infoAdicional: `${mesinha.nome} - ${item.item_nome}`,
                       })}
                       rotulo={`QR code PIX de ${item.item_nome}`}
                       largura={96}
