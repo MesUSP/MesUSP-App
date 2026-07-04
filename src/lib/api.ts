@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import type {
   CardapioItem,
   CardapioMesinha,
+  ConexaoGoogle,
   Item,
   Listagem,
   Mesinha,
@@ -334,4 +335,62 @@ export async function sincronizarPlanilha(mesinhaId: string): Promise<void> {
     throw new Error(detalhe);
   }
   if (data?.erro) throw new Error(data.erro);
+}
+
+/** Status da conexão Google do usuário atual (sem expor o refresh token). */
+export async function obterConexaoGoogle(): Promise<ConexaoGoogle | null> {
+  const { data, error } = await supabase
+    .from('minha_conexao_google')
+    .select('usuario_id, email_google, escopo, conectado_em')
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as ConexaoGoogle) ?? null;
+}
+
+/** Troca o authorization code do Google pelo refresh token (guardado no backend). */
+export async function conectarGoogle(code: string, redirectUri: string): Promise<void> {
+  const { data, error } = await supabase.functions.invoke('google-oauth-conectar', {
+    body: { code, redirect_uri: redirectUri },
+  });
+  if (error) {
+    let detalhe = error.message;
+    if ('context' in error && error.context instanceof Response) {
+      try {
+        const corpo = await error.context.json();
+        if (corpo?.erro) detalhe = corpo.erro;
+      } catch {
+        // mantém a mensagem original
+      }
+    }
+    throw new Error(detalhe);
+  }
+  if (data?.erro) throw new Error(data.erro);
+}
+
+/** Access token efêmero (drive.file) para abrir o Google Picker no navegador. */
+export async function obterAccessTokenGoogle(): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('google-access-token', { body: {} });
+  if (error) {
+    let detalhe = error.message;
+    if ('context' in error && error.context instanceof Response) {
+      try {
+        const corpo = await error.context.json();
+        if (corpo?.erro) detalhe = corpo.erro;
+      } catch {
+        // mantém a mensagem original
+      }
+    }
+    throw new Error(detalhe);
+  }
+  if (data?.erro) throw new Error(data.erro);
+  return data.access_token as string;
+}
+
+/** Revoga a conexão removendo o refresh token guardado (RLS: só a própria linha). */
+export async function desconectarGoogle(): Promise<void> {
+  const { error } = await supabase
+    .from('google_credenciais')
+    .delete()
+    .eq('usuario_id', (await supabase.auth.getUser()).data.user?.id ?? '');
+  if (error) throw new Error(error.message);
 }

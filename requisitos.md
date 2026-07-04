@@ -128,7 +128,7 @@ estoque atual = reposições − vendas − perdas registradas − slippage
 * **RF-SYNC-01** Os dados de estoque e vendas devem ser sincronizados entre a aplicação e uma planilha do Google.
 * **RF-SYNC-02** A planilha deve pertencer ao centro acadêmico, atlética ou organização responsável pela mesinha.
 * **RF-SYNC-03** A sincronização deve ser unidirecional: a aplicação é a fonte de verdade e envia dados para a planilha.
-* **RF-SYNC-04** A sincronização deve ocorrer em ambiente confiável por meio de Supabase Edge Functions e conta de serviço do Google. As credenciais não podem ser expostas no front-end.
+* **RF-SYNC-04** A sincronização deve ocorrer em ambiente confiável por meio de Supabase Edge Functions. A autorização de escrita usa OAuth por usuário com escopo `drive.file`: o proprietário conecta a própria conta Google e escolhe a planilha pelo Google Picker; o backend guarda apenas o refresh token. O client secret e o refresh token não podem ser expostos no front-end.
 
 ## 5. Requisitos não funcionais
 

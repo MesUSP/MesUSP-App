@@ -24,6 +24,13 @@ export interface Mesinha {
   criado_em: string;
 }
 
+export interface ConexaoGoogle {
+  usuario_id: string;
+  email_google: string | null;
+  escopo: string;
+  conectado_em: string;
+}
+
 export interface MesinhaMembro {
   mesinha_id: string;
   usuario_id: string;

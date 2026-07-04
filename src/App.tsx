@@ -12,6 +12,7 @@ import { RelatoriosPage } from './pages/RelatoriosPage';
 import { CardapioPage } from './pages/CardapioPage';
 import { ImprimirQrPage } from './pages/ImprimirQrPage';
 import { ImpressaoPage } from './pages/ImpressaoPage';
+import { GoogleCallbackPage } from './pages/GoogleCallbackPage';
 
 interface Rota {
   padrao: string;
@@ -22,6 +23,7 @@ interface Rota {
 const ROTAS: Rota[] = [
   { padrao: '/', render: () => <MesinhasPage /> },
   { padrao: '/perfil', render: () => <PerfilPage /> },
+  { padrao: '/google/callback', render: () => <GoogleCallbackPage /> },
   { padrao: '/itens', render: () => <ItensPage /> },
   { padrao: '/relatorios', render: () => <RelatoriosPage /> },
   { padrao: '/impressao', render: () => <ImpressaoPage /> },
