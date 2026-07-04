@@ -1,13 +1,21 @@
-# Configuração de build do Netlify (usada quando o site é conectado ao repo).
+# Configuração do Netlify.
 # As variáveis VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY,
 # VITE_GOOGLE_CLIENT_ID e VITE_GOOGLE_API_KEY devem ser definidas no painel do
 # site (são públicas, mas ficam fora do repositório).
 
+# ESTE SITE NÃO BUILDA NO NETLIFY.
+# O build roda na máquina e o deploy sobe o `dist` pronto: `npm run deploy`
+# (= netlify deploy --prod --dir=dist --no-build). Builds remotos já custaram
+# 240 créditos, então `ignore = "/bin/true"` faz o Netlify PULAR qualquer build
+# disparado por Git ou pela UI (exit 0 = "ignore este build"). O deploy pela CLI
+# com --no-build não é afetado: ele nem chega a buildar, só envia os arquivos.
 [build]
   command = "npm run build"
   publish = "dist"
+  ignore = "/bin/true"
 
 [build.environment]
+  # Só usado se algum build remoto for forçado (o ignore acima deve impedir).
   NODE_VERSION = "22"
 
 [[redirects]]

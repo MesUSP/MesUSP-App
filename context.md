@@ -7,8 +7,10 @@ A especificação completa está em [requisitos.md](requisitos.md).
 ## Estado atual
 
 - **Produção**: <https://mesusp.netlify.app> — site `mesusp` no time **MesUSP**
-  do Netlify (deploy manual com `netlify deploy --prod --dir dist`; o
-  `netlify.toml` também permite build conectado ao repositório).
+  do Netlify. **O build roda na máquina, nunca no Netlify**: `npm run deploy`
+  builda local e sobe o `dist` pronto (`netlify deploy --prod --dir=dist
+  --no-build`). O `netlify.toml` traz `ignore = "/bin/true"` para pular qualquer
+  build remoto disparado por Git/UI — ver "Armadilhas conhecidas".
 - **Backend**: projeto Supabase hosted `pmgyknbxhzofuedtcquj`
   (`https://pmgyknbxhzofuedtcquj.supabase.co`), configurado pelo repositório
   `MesUSP-Backend`.
@@ -69,13 +71,21 @@ públicas; a `service_role` nunca entra no frontend.
   máquina nova: `sudo dnf install nodejs npm`, depois `npm install`.
 - O build embute as variáveis `VITE_*` no bundle: depois de trocar `.env.local`
   é preciso rebuildar.
-- **Deploy no Netlify é manual e sensível a `process.env`**: não há CI de Git.
-  Use `npm run build && netlify deploy --prod --dir=dist --no-build`. Sem
-  `--no-build`, o Netlify rebuilda injetando as vars do painel no `process.env`,
-  que o **Vite prioriza sobre o `.env.local`**; um valor divergente de
-  `VITE_GOOGLE_CLIENT_ID` no painel já causou `Erro 401: invalid_client`.
-  Mantenha painel e `.env.local` iguais (`netlify env:list` / `env:set`). Passo
-  a passo no README.
+- **Build é sempre local; o Netlify nunca builda.** Builds remotos já
+  consumiram **240 créditos** durante a integração do OAuth. Deploy: `npm run
+  deploy` (= `netlify deploy --prod --dir=dist --no-build`); rascunho com
+  `npm run deploy:draft`. Duas travas garantem isso:
+  1. `--no-build` na CLI: o Netlify recebe o `dist` pronto e nem builda.
+  2. `ignore = "/bin/true"` no `netlify.toml`: se o repo estiver (ou vier a ser)
+     ligado ao Netlify, todo build disparado por Git/UI é **pulado** (o comando
+     de ignore retorna 0 = "ignore este build"), antes mesmo de rodar `npm run
+     build` na nuvem. Se um dia quiser CI de verdade no Netlify, remova essa
+     linha — e lembre do custo.
+- **Deploy é sensível a `process.env`**: sem `--no-build`, o Netlify rebuilda
+  injetando as vars do painel no `process.env`, que o **Vite prioriza sobre o
+  `.env.local`**; um valor divergente de `VITE_GOOGLE_CLIENT_ID` no painel já
+  causou `Erro 401: invalid_client`. Mantenha painel e `.env.local` iguais
+  (`netlify env:list` / `env:set`).
 - **Consentimento OAuth do Google em modo *Testing***: só contas adicionadas
   como *test users* conseguem conectar (senão, `Erro 403: access_denied`), e os
   refresh tokens expiram em 7 dias. Como o app usa só escopos não sensíveis
