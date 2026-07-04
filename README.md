@@ -59,28 +59,6 @@ npm run dev
 | `npm run preview` | serve o build de produção localmente |
 | `npm run icons` | regenera os ícones PNG do PWA em `public/icons` |
 
-## Deploy (produção)
-
-O site fica em <https://mesusp.netlify.app> (projeto Netlify `mesusp`). **Não há CI
-de Git** ligado ao repositório: todo deploy é manual pela CLI. O comando confiável,
-a partir da raiz de `MesUSP-App`, é:
-
-```bash
-npm run build
-netlify deploy --prod --dir=dist --no-build
-```
-
-**Por que `--no-build` importa:** sem essa flag, o `netlify deploy` roda o próprio
-build injetando as variáveis do painel do Netlify no `process.env`, e o **Vite dá
-prioridade ao `process.env` sobre o `.env.local`**. Se um valor divergir (já
-aconteceu com `VITE_GOOGLE_CLIENT_ID`, gerando `Erro 401: invalid_client` no
-Google), o bundle sai com a credencial errada. Buildar localmente (só com o
-`.env.local`) e subir com `--no-build` é determinístico.
-
-Mantenha as variáveis do painel do Netlify **iguais** às do `.env.local`
-(`netlify env:list` para conferir; `netlify env:set CHAVE valor` para corrigir).
-Idealmente, ligue o CI ao repositório e passe a manter as variáveis só no painel.
-
 ## Integração com o backend
 
 Alterações no banco, políticas de Row Level Security, funções e dados iniciais pertencem ao `MesUSP-Backend`. O frontend deve acessar apenas as APIs e funções autorizadas pelas políticas do Supabase.
