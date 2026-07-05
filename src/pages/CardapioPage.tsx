@@ -101,7 +101,9 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
             .map((item) => (
               <article
                 key={item.listagem_id}
-                className={`cardapio-item ${item.disponivel ? '' : 'indisponivel'}`.trim()}
+                // Todo item é exibido como se tivesse estoque: o cardápio não
+                // sinaliza esgotados (sem esmaecer, sem tag, com botão de pagar).
+                className="cardapio-item"
               >
                 {item.vendedor_pix && (
                   <div className="cardapio-item-qr" aria-hidden="true">
@@ -119,7 +121,6 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
                 )}
                 <div className="cardapio-item-info">
                   <strong>{item.item_nome}</strong>
-                  {!item.disponivel && <span className="etiqueta etiqueta-alerta" style={{ marginLeft: 8 }}>esgotado</span>}
                   {item.item_descricao && (
                     <p className="subtitulo" style={{ margin: '0.15rem 0 0', fontSize: '0.85rem' }}>
                       {item.item_descricao}
@@ -131,7 +132,7 @@ export function CardapioPage({ mesinhaId }: { mesinhaId: string }) {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div className="preco">{formatarMoeda(item.preco_atual)}</div>
-                  {item.vendedor_pix && item.disponivel && (
+                  {item.vendedor_pix && (
                     <button
                       type="button"
                       className="botao botao-pequeno nao-imprimir"
