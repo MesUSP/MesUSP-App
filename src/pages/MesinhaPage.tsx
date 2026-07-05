@@ -11,6 +11,7 @@ import {
   obterConexaoGoogle,
   obterMesinha,
   removerColaborador,
+  removerMesinha,
   sincronizarPlanilha,
 } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
@@ -82,7 +83,9 @@ export function MesinhaPage({ id }: { id: string }) {
         <div className="linha-flex">
           <span className="etiqueta">{mesinha.tipo}</span>
           {!mesinha.ativo && <span className="etiqueta etiqueta-alerta">desativada</span>}
-          {mesinha.arquivada && <span className="etiqueta etiqueta-erro">arquivada</span>}
+          {mesinha.status === 'arquivada' && (
+            <span className="etiqueta etiqueta-erro">arquivada</span>
+          )}
         </div>
       </div>
 
@@ -706,7 +709,9 @@ function AbaConfiguracoes({
       <div className="cartao">
         <h2>Situação</h2>
         <p className="subtitulo">
-          Desativar esconde a mesinha do cardápio público; arquivar encerra a operação dela.
+          Desativar esconde a mesinha do cardápio público. Arquivar encerra a operação: ela some do
+          aplicativo, mas continua visível para você, que pode desarquivá-la. Remover apaga a
+          mesinha do aplicativo para todo mundo, inclusive você — sem volta.
         </p>
         <div className="linha-flex">
           <button
@@ -723,22 +728,40 @@ function AbaConfiguracoes({
           </button>
           <button
             type="button"
-            className="botao botao-perigo"
+            className="botao botao-secundario"
             onClick={() => {
-              if (mesinha.arquivada) {
+              if (mesinha.status === 'arquivada') {
                 void executar(
-                  () => atualizarMesinha(mesinha.id, { arquivada: false }),
+                  () => atualizarMesinha(mesinha.id, { status: 'ativa' }),
                   'Mesinha desarquivada.',
                 );
-              } else if (window.confirm('Arquivar esta mesinha? Ela sairá do cardápio público.')) {
-                void executar(async () => {
-                  await atualizarMesinha(mesinha.id, { arquivada: true, ativo: false });
-                  navegar('/');
-                }, 'Mesinha arquivada.');
+              } else if (window.confirm('Arquivar esta mesinha? Ela sairá do cardápio público e só você continuará vendo.')) {
+                void executar(
+                  () => atualizarMesinha(mesinha.id, { status: 'arquivada', ativo: false }),
+                  'Mesinha arquivada.',
+                );
               }
             }}
           >
-            {mesinha.arquivada ? 'Desarquivar' : 'Arquivar'}
+            {mesinha.status === 'arquivada' ? 'Desarquivar' : 'Arquivar'}
+          </button>
+          <button
+            type="button"
+            className="botao botao-perigo"
+            onClick={() => {
+              if (
+                window.confirm(
+                  `Remover a mesinha “${mesinha.nome}”? Ela desaparecerá do aplicativo para todos, inclusive você, e NÃO poderá ser recuperada. As listagens dela ficarão arquivadas nas contas dos vendedores.`,
+                )
+              ) {
+                void executar(async () => {
+                  await removerMesinha(mesinha.id);
+                  navegar('/');
+                }, 'Mesinha removida.');
+              }
+            }}
+          >
+            Remover
           </button>
         </div>
       </div>

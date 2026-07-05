@@ -51,13 +51,19 @@ export function MesinhasPage() {
   }
 
   const usuarioId = sessao?.user.id;
+  const ativas = (mesinhas ?? []).filter((m) => m.status === 'ativa');
+  const arquivadas = (mesinhas ?? []).filter((m) => m.status === 'arquivada');
+  const minhas = (mesinhas ?? []).filter((m) => m.proprietario_id === usuarioId).length;
 
   return (
     <>
       <div className="cabecalho-pagina">
         <div>
           <h1>Minhas mesinhas</h1>
-          <p className="subtitulo">Mesinhas que você administra ou nas quais colabora.</p>
+          <p className="subtitulo">
+            Mesinhas que você administra ou nas quais colabora. Você usa {minhas} de 2 mesinhas da
+            sua conta.
+          </p>
         </div>
         <button
           type="button"
@@ -126,30 +132,58 @@ export function MesinhasPage() {
           </p>
         </div>
       ) : (
-        <div className="grade">
-          {mesinhas.map((mesinha) => (
-            <Link key={mesinha.id} para={`/mesinhas/${mesinha.id}`} className="cartao cartao-link">
-              <div className="linha-flex">
-                <h2 style={{ marginBottom: 0 }}>{mesinha.nome}</h2>
-                <span className="espacador" />
-                {mesinha.proprietario_id === usuarioId ? (
-                  <span className="etiqueta etiqueta-primaria">proprietário</span>
-                ) : (
-                  <span className="etiqueta">colaborador</span>
-                )}
-              </div>
-              <p className="subtitulo" style={{ margin: '0.4rem 0' }}>
-                {mesinha.descricao || 'Sem descrição.'}
+        <>
+          {ativas.length === 0 ? (
+            <div className="cartao">
+              <p>Nenhuma mesinha ativa.</p>
+            </div>
+          ) : (
+            <div className="grade">
+              {ativas.map((mesinha) => (
+                <CartaoMesinha key={mesinha.id} mesinha={mesinha} usuarioId={usuarioId} />
+              ))}
+            </div>
+          )}
+
+          {arquivadas.length > 0 && (
+            <div className="secao">
+              <h2>Mesinhas arquivadas</h2>
+              <p className="subtitulo">
+                Visíveis apenas para você. Desarquive nas configurações da mesinha.
               </p>
-              <div className="linha-flex">
-                <span className="etiqueta">{mesinha.tipo}</span>
-                {!mesinha.ativo && <span className="etiqueta etiqueta-alerta">desativada</span>}
-                {mesinha.arquivada && <span className="etiqueta etiqueta-erro">arquivada</span>}
+              <div className="grade">
+                {arquivadas.map((mesinha) => (
+                  <CartaoMesinha key={mesinha.id} mesinha={mesinha} usuarioId={usuarioId} />
+                ))}
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+          )}
+        </>
       )}
     </>
+  );
+}
+
+function CartaoMesinha({ mesinha, usuarioId }: { mesinha: Mesinha; usuarioId?: string }) {
+  return (
+    <Link para={`/mesinhas/${mesinha.id}`} className="cartao cartao-link">
+      <div className="linha-flex">
+        <h2 style={{ marginBottom: 0 }}>{mesinha.nome}</h2>
+        <span className="espacador" />
+        {mesinha.proprietario_id === usuarioId ? (
+          <span className="etiqueta etiqueta-primaria">proprietário</span>
+        ) : (
+          <span className="etiqueta">colaborador</span>
+        )}
+      </div>
+      <p className="subtitulo" style={{ margin: '0.4rem 0' }}>
+        {mesinha.descricao || 'Sem descrição.'}
+      </p>
+      <div className="linha-flex">
+        <span className="etiqueta">{mesinha.tipo}</span>
+        {!mesinha.ativo && <span className="etiqueta etiqueta-alerta">desativada</span>}
+        {mesinha.status === 'arquivada' && <span className="etiqueta etiqueta-erro">arquivada</span>}
+      </div>
+    </Link>
   );
 }
