@@ -1,10 +1,18 @@
 // Tipos espelhando o modelo de dados do MesUSP-Backend.
 
+/**
+ * Estados de arquivamento/remoção (mesma semântica em conta, mesinha, item e
+ * listagem): arquivado some do app mas o dono vê e pode desarquivar; removido
+ * some também para o dono (permanece no banco, mas a API nunca o retorna).
+ */
+export type StatusConta = 'ativa' | 'arquivada' | 'removida';
+
 export interface Profile {
   id: string;
   nome: string;
   email: string;
   pix_key: string | null;
+  status: StatusConta;
   criado_em: string;
 }
 
@@ -19,7 +27,7 @@ export interface Mesinha {
   latitude: number | null;
   longitude: number | null;
   ativo: boolean;
-  arquivada: boolean;
+  status: 'ativa' | 'arquivada' | 'removida';
   planilha_id: string | null;
   criado_em: string;
 }
@@ -47,6 +55,7 @@ export interface Item {
   categoria: string;
   descricao: string;
   foto_url: string | null;
+  status: 'ativo' | 'arquivado' | 'removido';
   criado_em: string;
 }
 
@@ -57,7 +66,7 @@ export interface Listagem {
   dono_id: string;
   preco_atual: number;
   estoque_atual: number;
-  status: 'ativa' | 'arquivada';
+  status: 'ativa' | 'arquivada' | 'removida';
   criado_em: string;
   itens?: Pick<Item, 'nome' | 'categoria' | 'descricao'>;
   mesinhas?: Pick<Mesinha, 'nome' | 'tipo'>;
@@ -77,6 +86,8 @@ export interface Reposicao {
   listagem_id: string;
   quantidade: number;
   custo_unitario_compra: number;
+  /** Quando a reposição foi revertida (null = vigente). */
+  revertida_em: string | null;
   data: string;
 }
 
@@ -88,6 +99,7 @@ export interface Venda {
   quantidade: number;
   preco_unitario: number;
   status_pagamento: StatusPagamento;
+  revertida_em: string | null;
   data: string;
 }
 
@@ -96,6 +108,7 @@ export interface Perda {
   listagem_id: string;
   quantidade: number;
   motivo: string;
+  revertida_em: string | null;
   data: string;
 }
 

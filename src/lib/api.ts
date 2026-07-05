@@ -53,9 +53,15 @@ export async function criarMesinha(dados: {
 
 export async function atualizarMesinha(
   id: string,
-  dados: Partial<Pick<Mesinha, 'nome' | 'tipo' | 'descricao' | 'ativo' | 'arquivada' | 'planilha_id'>>,
+  dados: Partial<Pick<Mesinha, 'nome' | 'tipo' | 'descricao' | 'ativo' | 'status' | 'planilha_id'>>,
 ): Promise<void> {
   const { error } = await supabase.from('mesinhas').update(dados).eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+/** Soft delete: a mesinha some do app e do proprietário, mas permanece no banco. */
+export async function removerMesinha(id: string): Promise<void> {
+  const { error } = await supabase.rpc('remover_mesinha', { p_mesinha: id });
   if (error) throw new Error(error.message);
 }
 
@@ -114,9 +120,21 @@ export async function criarItem(dados: {
 
 export async function atualizarItem(
   id: string,
-  dados: Partial<Pick<Item, 'nome' | 'categoria' | 'descricao'>>,
+  dados: Partial<Pick<Item, 'nome' | 'categoria' | 'descricao' | 'status'>>,
 ): Promise<void> {
   const { error } = await supabase.from('itens').update(dados).eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+/** Arquiva o item e retira as listagens ativas dele das mesinhas. */
+export async function arquivarItem(id: string): Promise<void> {
+  const { error } = await supabase.rpc('arquivar_item', { p_item: id });
+  if (error) throw new Error(error.message);
+}
+
+/** Soft delete: o item some do app e do dono, mas permanece no banco. */
+export async function removerItem(id: string): Promise<void> {
+  const { error } = await supabase.rpc('remover_item', { p_item: id });
   if (error) throw new Error(error.message);
 }
 
@@ -248,6 +266,24 @@ export async function registrarPerda(dados: {
   }
 }
 
+// Reversões: a movimentação permanece no histórico com revertida_em
+// preenchido e o estoque é estornado pelo backend (one-way).
+
+export async function reverterReposicao(id: string): Promise<void> {
+  const { error } = await supabase.rpc('reverter_reposicao', { p_reposicao: id });
+  if (error) throw new Error(error.message);
+}
+
+export async function reverterVenda(id: string): Promise<void> {
+  const { error } = await supabase.rpc('reverter_venda', { p_venda: id });
+  if (error) throw new Error(error.message);
+}
+
+export async function reverterPerda(id: string): Promise<void> {
+  const { error } = await supabase.rpc('reverter_perda', { p_perda: id });
+  if (error) throw new Error(error.message);
+}
+
 export async function reconciliarListagem(listagemId: string): Promise<ReconciliacaoListagem> {
   const { data, error } = await supabase
     .from('reconciliacao_listagens')
@@ -269,19 +305,23 @@ export interface MovimentacoesPeriodo {
 
 export async function movimentacoesDesde(inicio: Date): Promise<MovimentacoesPeriodo> {
   const iso = inicio.toISOString();
+  // Movimentações revertidas ficam fora dos relatórios e do slippage.
   const [vendas, reposicoes, perdas] = await Promise.all([
     supabase
       .from('vendas')
       .select('*, listagens!inner(dono_id, mesinha_id, preco_atual)')
-      .gte('data', iso),
+      .gte('data', iso)
+      .is('revertida_em', null),
     supabase
       .from('reposicoes')
       .select('*, listagens!inner(dono_id, mesinha_id)')
-      .gte('data', iso),
+      .gte('data', iso)
+      .is('revertida_em', null),
     supabase
       .from('perdas')
       .select('*, listagens!inner(dono_id, mesinha_id, preco_atual)')
-      .gte('data', iso),
+      .gte('data', iso)
+      .is('revertida_em', null),
   ]);
   const erro = vendas.error ?? reposicoes.error ?? perdas.error;
   if (erro) throw new Error(erro.message);
@@ -389,5 +429,27 @@ export async function obterAccessTokenGoogle(): Promise<string> {
 /** Revoga a conexão removendo o refresh token guardado (RPC security definer). */
 export async function desconectarGoogle(): Promise<void> {
   const { error } = await supabase.rpc('desconectar_google');
+  if (error) throw new Error(error.message);
+}
+
+// --------------------------------------------------------------------------
+// Conta: arquivar e remover (soft delete)
+// --------------------------------------------------------------------------
+
+/** Arquiva a conta e tudo que é dela: some do app, mas o dono continua vendo. */
+export async function arquivarConta(): Promise<void> {
+  const { error } = await supabase.rpc('arquivar_conta');
+  if (error) throw new Error(error.message);
+}
+
+/** Desarquiva a conta; mesinhas, itens e listagens são desarquivados individualmente. */
+export async function desarquivarConta(): Promise<void> {
+  const { error } = await supabase.rpc('desarquivar_conta');
+  if (error) throw new Error(error.message);
+}
+
+/** Remove a conta: some do app e do dono; os dados permanecem no banco. Irreversível. */
+export async function removerConta(): Promise<void> {
+  const { error } = await supabase.rpc('remover_conta');
   if (error) throw new Error(error.message);
 }
