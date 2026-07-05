@@ -5,7 +5,7 @@ import { Link } from '../router';
 import type { Mesinha, TipoMesinha } from '../types';
 
 export function MesinhasPage() {
-  const { sessao } = useAuth();
+  const { sessao, perfil } = useAuth();
   const [mesinhas, setMesinhas] = useState<Mesinha[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
@@ -54,6 +54,12 @@ export function MesinhasPage() {
   const ativas = (mesinhas ?? []).filter((m) => m.status === 'ativa');
   const arquivadas = (mesinhas ?? []).filter((m) => m.status === 'arquivada');
   const minhas = (mesinhas ?? []).filter((m) => m.proprietario_id === usuarioId).length;
+  // O limite vem da categoria da conta (null = sem limite).
+  const limite = perfil?.categorias?.limite_mesinhas;
+  const usoDaConta =
+    limite != null
+      ? `Você usa ${minhas} de ${limite} mesinhas da sua conta.`
+      : `Você usa ${minhas} ${minhas === 1 ? 'mesinha' : 'mesinhas'}, sem limite na sua categoria.`;
 
   return (
     <>
@@ -61,8 +67,7 @@ export function MesinhasPage() {
         <div>
           <h1>Minhas mesinhas</h1>
           <p className="subtitulo">
-            Mesinhas que você administra ou nas quais colabora. Você usa {minhas} de 2 mesinhas da
-            sua conta.
+            Mesinhas que você administra ou nas quais colabora. {usoDaConta}
           </p>
         </div>
         <button

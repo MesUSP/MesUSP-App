@@ -12,7 +12,7 @@ import type { Item } from '../types';
 const CATEGORIAS = ['doces', 'salgados', 'bebidas', 'outros'];
 
 export function ItensPage() {
-  const { sessao } = useAuth();
+  const { sessao, perfil } = useAuth();
   const [itens, setItens] = useState<Item[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [editando, setEditando] = useState<Item | null>(null);
@@ -113,6 +113,13 @@ export function ItensPage() {
 
   const ativos = (itens ?? []).filter((item) => item.status === 'ativo');
   const arquivados = (itens ?? []).filter((item) => item.status === 'arquivado');
+  // O limite vem da categoria da conta (null = sem limite).
+  const limite = perfil?.categorias?.limite_itens;
+  const total = (itens ?? []).length;
+  const usoDaConta =
+    limite != null
+      ? `Você usa ${total} de ${limite} itens da sua conta.`
+      : `Você usa ${total} ${total === 1 ? 'item' : 'itens'}, sem limite na sua categoria.`;
 
   return (
     <>
@@ -120,8 +127,8 @@ export function ItensPage() {
         <div>
           <h1>Meus itens</h1>
           <p className="subtitulo">
-            Produtos que você vende. Um mesmo item pode ser listado em várias mesinhas. Você usa{' '}
-            {(itens ?? []).length} de 20 itens da sua conta.
+            Produtos que você vende. Um mesmo item pode ser listado em várias mesinhas.{' '}
+            {usoDaConta}
           </p>
         </div>
         <button type="button" className="botao" onClick={iniciarCriacao}>

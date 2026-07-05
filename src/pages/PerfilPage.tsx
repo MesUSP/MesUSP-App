@@ -17,6 +17,13 @@ export function PerfilPage() {
     }
   }, [perfil]);
 
+  const categoria = perfil?.categorias;
+  const descricaoLimites = categoria
+    ? categoria.limite_mesinhas === null && categoria.limite_itens === null
+      ? 'Sua conta não tem limite de mesinhas nem de itens.'
+      : `Sua conta pode ter até ${categoria.limite_mesinhas ?? 'ilimitadas'} mesinhas e ${categoria.limite_itens ?? 'ilimitados'} itens.`
+    : 'Cada conta pode ter até 2 mesinhas e 20 itens.';
+
   async function aoSalvar(evento: FormEvent) {
     evento.preventDefault();
     setMensagem(null);
@@ -36,7 +43,15 @@ export function PerfilPage() {
       <div className="cabecalho-pagina">
         <div>
           <h1>Meu perfil</h1>
-          <p className="subtitulo">{perfil?.email}</p>
+          <p className="subtitulo">
+            {perfil?.email}
+            {categoria && (
+              <>
+                {' · '}
+                <span className="etiqueta etiqueta-primaria">{categoria.nome}</span>
+              </>
+            )}
+          </p>
         </div>
       </div>
 
@@ -74,10 +89,15 @@ export function PerfilPage() {
 
       <div className="cartao" style={{ maxWidth: 480, marginTop: '1rem' }}>
         <h2>Conta</h2>
+        {categoria && (
+          <p className="subtitulo">
+            Categoria da conta: <strong>{categoria.nome}</strong>.
+          </p>
+        )}
         <p className="subtitulo">
-          Cada conta pode ter até 2 mesinhas e 20 itens. Arquivar a conta esconde suas mesinhas e
-          itens do aplicativo, mas você continua vendo tudo e pode desarquivar. Remover a conta
-          esconde tudo inclusive de você — sem volta.
+          {descricaoLimites} Arquivar a conta esconde suas mesinhas e itens do aplicativo, mas
+          você continua vendo tudo e pode desarquivar. Remover a conta esconde tudo inclusive de
+          você — sem volta.
         </p>
         {mensagemConta && <p className="mensagem-erro">{mensagemConta}</p>}
         <div className="linha-flex">
