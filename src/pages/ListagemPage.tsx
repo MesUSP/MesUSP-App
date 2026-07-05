@@ -11,6 +11,9 @@ import {
   registrarPerda,
   registrarReposicao,
   registrarVenda,
+  reverterPerda,
+  reverterReposicao,
+  reverterVenda,
 } from '../lib/api';
 import { Link } from '../router';
 import { formatarDataHora, formatarMoeda } from '../lib/format';
@@ -57,7 +60,7 @@ export function ListagemPage({ id }: { id: string }) {
   if (erro && !listagem) return <p className="mensagem-erro">{erro}</p>;
   if (!listagem) return <p className="subtitulo">Carregando…</p>;
 
-  const pendentes = vendas.filter((v) => v.status_pagamento === 'pendente');
+  const pendentes = vendas.filter((v) => v.status_pagamento === 'pendente' && !v.revertida_em);
   const valorPendente = pendentes.reduce((soma, v) => soma + v.quantidade * v.preco_unitario, 0);
 
   return (
@@ -191,7 +194,21 @@ function AbaVendas({
   const [preco, setPreco] = useState(String(listagem.preco_atual));
   const [pagamentoRecebido, setPagamentoRecebido] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [erroReversao, setErroReversao] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+
+  async function aoReverter(venda: Venda) {
+    if (!window.confirm('Reverter esta venda? O estoque será devolvido e ela sairá dos relatórios.')) {
+      return;
+    }
+    setErroReversao(null);
+    try {
+      await reverterVenda(venda.id);
+      await aoAtualizar();
+    } catch (excecao) {
+      setErroReversao(excecao instanceof Error ? excecao.message : String(excecao));
+    }
+  }
 
   async function aoRegistrar(evento: FormEvent) {
     evento.preventDefault();
@@ -264,6 +281,7 @@ function AbaVendas({
         </p>
       </div>
 
+      {erroReversao && <p className="mensagem-erro">{erroReversao}</p>}
       <div className="cartao tabela-rolagem">
         <table>
           <thead>
@@ -285,7 +303,7 @@ function AbaVendas({
               </tr>
             )}
             {vendas.map((venda) => (
-              <tr key={venda.id}>
+              <tr key={venda.id} style={venda.revertida_em ? { opacity: 0.55 } : undefined}>
                 <td>{formatarDataHora(venda.data)}</td>
                 <td className="numero">{venda.quantidade}</td>
                 <td className="numero">{formatarMoeda(venda.preco_unitario)}</td>
@@ -298,14 +316,27 @@ function AbaVendas({
                   )}
                 </td>
                 <td>
-                  {venda.status_pagamento === 'pendente' && (
-                    <button
-                      type="button"
-                      className="botao botao-secundario botao-pequeno"
-                      onClick={() => void confirmarPagamento(venda.id).then(aoAtualizar)}
-                    >
-                      Confirmar pagamento
-                    </button>
+                  {venda.revertida_em ? (
+                    <span className="etiqueta">revertida</span>
+                  ) : (
+                    <span className="linha-flex">
+                      {venda.status_pagamento === 'pendente' && (
+                        <button
+                          type="button"
+                          className="botao botao-secundario botao-pequeno"
+                          onClick={() => void confirmarPagamento(venda.id).then(aoAtualizar)}
+                        >
+                          Confirmar pagamento
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="botao botao-fantasma botao-pequeno"
+                        onClick={() => void aoReverter(venda)}
+                      >
+                        Reverter
+                      </button>
+                    </span>
                   )}
                 </td>
               </tr>
@@ -333,6 +364,7 @@ function AbaReposicoes({
   const [quantidade, setQuantidade] = useState('');
   const [custo, setCusto] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const [erroReversao, setErroReversao] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   async function aoRegistrar(evento: FormEvent) {
@@ -352,6 +384,23 @@ function AbaReposicoes({
       setErro(excecao instanceof Error ? excecao.message : String(excecao));
     } finally {
       setOcupado(false);
+    }
+  }
+
+  async function aoReverter(reposicao: Reposicao) {
+    if (
+      !window.confirm(
+        'Reverter esta reposição? As unidades sairão do estoque e ela deixará de contar como gasto.',
+      )
+    ) {
+      return;
+    }
+    setErroReversao(null);
+    try {
+      await reverterReposicao(reposicao.id);
+      await aoAtualizar();
+    } catch (excecao) {
+      setErroReversao(excecao instanceof Error ? excecao.message : String(excecao));
     }
   }
 
@@ -391,6 +440,7 @@ function AbaReposicoes({
         </Formulario>
       </div>
 
+      {erroReversao && <p className="mensagem-erro">{erroReversao}</p>}
       <div className="cartao tabela-rolagem">
         <table>
           <thead>
@@ -399,23 +449,37 @@ function AbaReposicoes({
               <th className="numero">Qtd.</th>
               <th className="numero">Custo unitário</th>
               <th className="numero">Custo total</th>
+              <th />
             </tr>
           </thead>
           <tbody>
             {reposicoes.length === 0 && (
               <tr>
-                <td colSpan={4} className="subtitulo">
+                <td colSpan={5} className="subtitulo">
                   Nenhuma reposição registrada.
                 </td>
               </tr>
             )}
             {reposicoes.map((reposicao) => (
-              <tr key={reposicao.id}>
+              <tr key={reposicao.id} style={reposicao.revertida_em ? { opacity: 0.55 } : undefined}>
                 <td>{formatarDataHora(reposicao.data)}</td>
                 <td className="numero">{reposicao.quantidade}</td>
                 <td className="numero">{formatarMoeda(reposicao.custo_unitario_compra)}</td>
                 <td className="numero">
                   {formatarMoeda(reposicao.quantidade * reposicao.custo_unitario_compra)}
+                </td>
+                <td>
+                  {reposicao.revertida_em ? (
+                    <span className="etiqueta">revertida</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="botao botao-fantasma botao-pequeno"
+                      onClick={() => void aoReverter(reposicao)}
+                    >
+                      Reverter
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -442,7 +506,19 @@ function AbaPerdas({
   const [quantidade, setQuantidade] = useState('');
   const [motivo, setMotivo] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+  const [erroReversao, setErroReversao] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+
+  async function aoReverter(perda: Perda) {
+    if (!window.confirm('Reverter esta perda? As unidades voltarão ao estoque.')) return;
+    setErroReversao(null);
+    try {
+      await reverterPerda(perda.id);
+      await aoAtualizar();
+    } catch (excecao) {
+      setErroReversao(excecao instanceof Error ? excecao.message : String(excecao));
+    }
+  }
 
   async function aoRegistrar(evento: FormEvent) {
     evento.preventDefault();
@@ -501,6 +577,7 @@ function AbaPerdas({
         </Formulario>
       </div>
 
+      {erroReversao && <p className="mensagem-erro">{erroReversao}</p>}
       <div className="cartao tabela-rolagem">
         <table>
           <thead>
@@ -508,21 +585,35 @@ function AbaPerdas({
               <th>Data</th>
               <th className="numero">Qtd.</th>
               <th>Motivo</th>
+              <th />
             </tr>
           </thead>
           <tbody>
             {perdas.length === 0 && (
               <tr>
-                <td colSpan={3} className="subtitulo">
+                <td colSpan={4} className="subtitulo">
                   Nenhuma perda registrada.
                 </td>
               </tr>
             )}
             {perdas.map((perda) => (
-              <tr key={perda.id}>
+              <tr key={perda.id} style={perda.revertida_em ? { opacity: 0.55 } : undefined}>
                 <td>{formatarDataHora(perda.data)}</td>
                 <td className="numero">{perda.quantidade}</td>
                 <td style={{ whiteSpace: 'normal' }}>{perda.motivo}</td>
+                <td>
+                  {perda.revertida_em ? (
+                    <span className="etiqueta">revertida</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="botao botao-fantasma botao-pequeno"
+                      onClick={() => void aoReverter(perda)}
+                    >
+                      Reverter
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
