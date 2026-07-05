@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import type {
   CardapioItem,
   CardapioMesinha,
+  Categoria,
   ConexaoGoogle,
   Item,
   Listagem,
@@ -15,6 +16,7 @@ import type {
   ReconciliacaoListagem,
   Reposicao,
   TipoMesinha,
+  UsuarioAdmin,
   Venda,
 } from '../types';
 
@@ -451,5 +453,39 @@ export async function desarquivarConta(): Promise<void> {
 /** Remove a conta: some do app e do dono; os dados permanecem no banco. Irreversível. */
 export async function removerConta(): Promise<void> {
   const { error } = await supabase.rpc('remover_conta');
+  if (error) throw new Error(error.message);
+}
+
+// --------------------------------------------------------------------------
+// Administração (categoria desenvolvedor — o backend barra as demais contas)
+// --------------------------------------------------------------------------
+
+/** Categorias visíveis: a própria para o usuário comum, todas para o desenvolvedor. */
+export async function listarCategorias(): Promise<Categoria[]> {
+  const { data, error } = await supabase.from('categorias').select('*').order('nome');
+  return garantir(data, error) as Categoria[];
+}
+
+/** Lista todas as contas do aplicativo (RPC restrita a desenvolvedores). */
+export async function listarUsuariosAdmin(): Promise<UsuarioAdmin[]> {
+  const { data, error } = await supabase.rpc('admin_listar_usuarios');
+  return garantir(data, error) as UsuarioAdmin[];
+}
+
+/** Muda a categoria de outra conta (RPC restrita a desenvolvedores). */
+export async function alterarCategoriaUsuario(
+  usuarioId: string,
+  categoriaId: string,
+): Promise<void> {
+  const { error } = await supabase.rpc('admin_alterar_categoria', {
+    p_usuario: usuarioId,
+    p_categoria: categoriaId,
+  });
+  if (error) throw new Error(error.message);
+}
+
+/** Remove outra conta (soft delete, mesma cascata de removerConta). Irreversível. */
+export async function removerUsuarioAdmin(usuarioId: string): Promise<void> {
+  const { error } = await supabase.rpc('admin_remover_usuario', { p_usuario: usuarioId });
   if (error) throw new Error(error.message);
 }

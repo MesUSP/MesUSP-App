@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const carregarPerfil = useCallback(async (usuarioId: string) => {
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, categorias(id, nome, limite_mesinhas, limite_itens)')
       .eq('id', usuarioId)
       .single();
     if (!error) setPerfil(data as Profile);

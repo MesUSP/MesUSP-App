@@ -7,12 +7,38 @@
  */
 export type StatusConta = 'ativa' | 'arquivada' | 'removida';
 
+/**
+ * Categoria de conta: define limites (null = sem limite) e funcionalidades.
+ * O usuário comum só enxerga a própria categoria; o desenvolvedor vê todas.
+ */
+export interface Categoria {
+  id: string;
+  nome: string;
+  limite_mesinhas: number | null;
+  limite_itens: number | null;
+}
+
 export interface Profile {
   id: string;
   nome: string;
   email: string;
   pix_key: string | null;
   status: StatusConta;
+  categoria_id: string;
+  criado_em: string;
+  categorias?: Categoria;
+}
+
+/** Linha de admin_listar_usuarios (RPC restrita à categoria desenvolvedor). */
+export interface UsuarioAdmin {
+  id: string;
+  nome: string;
+  email: string;
+  status: StatusConta;
+  categoria_id: string;
+  categoria_nome: string;
+  mesinhas_no_limite: number;
+  itens_no_limite: number;
   criado_em: string;
 }
 
