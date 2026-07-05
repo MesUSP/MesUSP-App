@@ -11,9 +11,15 @@ const LINKS = [
   { para: '/perfil', rotulo: 'Perfil' },
 ];
 
+// Aba exclusiva da categoria desenvolvedor (o backend barra as demais contas;
+// esconder o link é só para a função não aparecer às outras categorias).
+const LINK_DESENVOLVEDOR = { para: '/desenvolvedor', rotulo: 'Desenvolvedor' };
+
 export function Layout({ children }: { children: ReactNode }) {
   const { caminho } = useRoteador();
   const { perfil, sair, recarregarPerfil } = useAuth();
+  const links =
+    perfil?.categoria_id === 'desenvolvedor' ? [...LINKS, LINK_DESENVOLVEDOR] : LINKS;
 
   return (
     <div className="aplicacao">
@@ -38,7 +44,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <span aria-hidden="true">▦</span> UniMesinha
           </Link>
           <nav className="navegacao" aria-label="Navegação principal">
-            {LINKS.map((link) => (
+            {links.map((link) => (
               <Link
                 key={link.para}
                 para={link.para}

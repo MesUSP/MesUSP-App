@@ -13,10 +13,13 @@ import { CardapioPage } from './pages/CardapioPage';
 import { ImprimirQrPage } from './pages/ImprimirQrPage';
 import { ImpressaoPage } from './pages/ImpressaoPage';
 import { GoogleCallbackPage } from './pages/GoogleCallbackPage';
+import { DesenvolvedorPage } from './pages/DesenvolvedorPage';
 
 interface Rota {
   padrao: string;
   publica?: boolean;
+  /** Restrita à categoria desenvolvedor (o backend barra as demais; aqui é UX). */
+  somenteDesenvolvedor?: boolean;
   render: (parametros: Record<string, string>) => ReactNode;
 }
 
@@ -25,6 +28,7 @@ const ROTAS: Rota[] = [
   { padrao: '/perfil', render: () => <PerfilPage /> },
   { padrao: '/google/callback', render: () => <GoogleCallbackPage /> },
   { padrao: '/itens', render: () => <ItensPage /> },
+  { padrao: '/desenvolvedor', somenteDesenvolvedor: true, render: () => <DesenvolvedorPage /> },
   { padrao: '/relatorios', render: () => <RelatoriosPage /> },
   { padrao: '/impressao', render: () => <ImpressaoPage /> },
   { padrao: '/mesinhas/:id', render: (p) => <MesinhaPage id={p.id} /> },
@@ -56,6 +60,28 @@ export function App() {
       );
     }
     if (!sessao) return <LoginPage />;
+
+    // Rotas exclusivas de desenvolvedor não existem para as demais categorias.
+    if (rota.somenteDesenvolvedor) {
+      if (!perfil) {
+        return (
+          <div className="pagina-centralizada">
+            <p className="subtitulo">Carregando…</p>
+          </div>
+        );
+      }
+      if (perfil.categoria_id !== 'desenvolvedor') {
+        return (
+          <div className="pagina-centralizada">
+            <div className="cartao" style={{ textAlign: 'center' }}>
+              <h1>Página não encontrada</h1>
+              <p className="subtitulo">O endereço {caminho} não existe.</p>
+              <a href="/">Voltar ao início</a>
+            </div>
+          </div>
+        );
+      }
+    }
 
     // Conta removida: os dados sumiram do app para o próprio dono (soft delete).
     if (perfil?.status === 'removida') {
