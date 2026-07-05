@@ -22,6 +22,8 @@ interface EstadoAutenticacao {
   cadastrar: (nome: string, email: string, senha: string) => Promise<boolean>;
   sair: () => Promise<void>;
   atualizarPerfil: (dados: { nome?: string; pix_key?: string | null }) => Promise<void>;
+  /** Recarrega o perfil do banco (ex.: após arquivar/desarquivar a conta). */
+  recarregarPerfil: () => Promise<void>;
 }
 
 const AuthContext = createContext<EstadoAutenticacao | null>(null);
@@ -98,9 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [sessao, carregarPerfil],
   );
 
+  const recarregarPerfil = useCallback(async () => {
+    if (sessao) await carregarPerfil(sessao.user.id);
+  }, [sessao, carregarPerfil]);
+
   const valor = useMemo(
-    () => ({ sessao, perfil, carregando, entrar, cadastrar, sair, atualizarPerfil }),
-    [sessao, perfil, carregando, entrar, cadastrar, sair, atualizarPerfil],
+    () => ({ sessao, perfil, carregando, entrar, cadastrar, sair, atualizarPerfil, recarregarPerfil }),
+    [sessao, perfil, carregando, entrar, cadastrar, sair, atualizarPerfil, recarregarPerfil],
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;

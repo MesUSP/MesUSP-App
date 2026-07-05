@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link, useRoteador } from '../router';
 import { useAuth } from '../context/AuthContext';
+import { desarquivarConta } from '../lib/api';
 
 const LINKS = [
   { para: '/', rotulo: 'Mesinhas' },
@@ -12,10 +13,25 @@ const LINKS = [
 
 export function Layout({ children }: { children: ReactNode }) {
   const { caminho } = useRoteador();
-  const { perfil, sair } = useAuth();
+  const { perfil, sair, recarregarPerfil } = useAuth();
 
   return (
     <div className="aplicacao">
+      {perfil?.status === 'arquivada' && (
+        <div className="cartao nao-imprimir" style={{ margin: '0.75rem', textAlign: 'center' }}>
+          <p style={{ margin: 0 }}>
+            <strong>Conta arquivada.</strong> Suas mesinhas e itens não aparecem no aplicativo nem
+            no cardápio público.{' '}
+            <button
+              type="button"
+              className="botao botao-secundario botao-pequeno"
+              onClick={() => void desarquivarConta().then(recarregarPerfil)}
+            >
+              Desarquivar conta
+            </button>
+          </p>
+        </div>
+      )}
       <header className="cabecalho nao-imprimir">
         <div className="cabecalho-conteudo">
           <Link para="/" className="marca">

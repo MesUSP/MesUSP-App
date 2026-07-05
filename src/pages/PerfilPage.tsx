@@ -1,12 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { arquivarConta, desarquivarConta, removerConta } from '../lib/api';
 
 export function PerfilPage() {
-  const { perfil, atualizarPerfil } = useAuth();
+  const { perfil, atualizarPerfil, recarregarPerfil, sair } = useAuth();
   const [nome, setNome] = useState('');
   const [chavePix, setChavePix] = useState('');
   const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [mensagemConta, setMensagemConta] = useState<string | null>(null);
 
   useEffect(() => {
     if (perfil) {
@@ -68,6 +70,75 @@ export function PerfilPage() {
             {salvando ? 'Salvando…' : 'Salvar'}
           </button>
         </form>
+      </div>
+
+      <div className="cartao" style={{ maxWidth: 480, marginTop: '1rem' }}>
+        <h2>Conta</h2>
+        <p className="subtitulo">
+          Cada conta pode ter até 2 mesinhas e 20 itens. Arquivar a conta esconde suas mesinhas e
+          itens do aplicativo, mas você continua vendo tudo e pode desarquivar. Remover a conta
+          esconde tudo inclusive de você — sem volta.
+        </p>
+        {mensagemConta && <p className="mensagem-erro">{mensagemConta}</p>}
+        <div className="linha-flex">
+          {perfil?.status === 'arquivada' ? (
+            <button
+              type="button"
+              className="botao botao-secundario"
+              onClick={() => {
+                setMensagemConta(null);
+                desarquivarConta()
+                  .then(recarregarPerfil)
+                  .catch((erro: unknown) =>
+                    setMensagemConta(erro instanceof Error ? erro.message : String(erro)),
+                  );
+              }}
+            >
+              Desarquivar conta
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="botao botao-fantasma"
+              onClick={() => {
+                if (
+                  !window.confirm(
+                    'Arquivar sua conta? Suas mesinhas, itens e listagens sairão do aplicativo e do cardápio público, mas você continuará vendo tudo e poderá desarquivar. Ao desarquivar, mesinhas e itens são reativados um a um.',
+                  )
+                ) {
+                  return;
+                }
+                setMensagemConta(null);
+                arquivarConta()
+                  .then(recarregarPerfil)
+                  .catch((erro: unknown) =>
+                    setMensagemConta(erro instanceof Error ? erro.message : String(erro)),
+                  );
+              }}
+            >
+              Arquivar conta
+            </button>
+          )}
+          <button
+            type="button"
+            className="botao botao-perigo"
+            onClick={() => {
+              const confirmado =
+                window.confirm(
+                  'Remover sua conta? Suas mesinhas, itens, listagens e histórico desaparecerão do aplicativo para todos — inclusive para você — e NÃO poderão ser recuperados.',
+                ) && window.confirm('Tem certeza? Esta ação não pode ser desfeita.');
+              if (!confirmado) return;
+              setMensagemConta(null);
+              removerConta()
+                .then(() => sair())
+                .catch((erro: unknown) =>
+                  setMensagemConta(erro instanceof Error ? erro.message : String(erro)),
+                );
+            }}
+          >
+            Remover conta
+          </button>
+        </div>
       </div>
     </>
   );

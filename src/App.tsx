@@ -39,7 +39,7 @@ const ROTAS: Rota[] = [
 
 export function App() {
   const { caminho } = useRoteador();
-  const { sessao, carregando } = useAuth();
+  const { sessao, perfil, carregando, sair } = useAuth();
 
   for (const rota of ROTAS) {
     const parametros = corresponderRota(rota.padrao, caminho);
@@ -56,6 +56,24 @@ export function App() {
       );
     }
     if (!sessao) return <LoginPage />;
+
+    // Conta removida: os dados sumiram do app para o próprio dono (soft delete).
+    if (perfil?.status === 'removida') {
+      return (
+        <div className="pagina-centralizada">
+          <div className="cartao" style={{ textAlign: 'center', maxWidth: 420 }}>
+            <h1>Conta removida</h1>
+            <p className="subtitulo">
+              Esta conta foi removida e os dados dela não estão mais disponíveis no aplicativo.
+            </p>
+            <button type="button" className="botao" onClick={() => void sair()}>
+              Sair
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return <Layout>{rota.render(parametros)}</Layout>;
   }
 
