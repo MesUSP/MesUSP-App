@@ -65,8 +65,19 @@ públicas; a `service_role` nunca entra no frontend.
   A linha continua no histórico com `revertida_em` preenchido (a UI atenua a
   linha e mostra a etiqueta "revertida"); o estoque é estornado pelo backend.
   Relatórios (`movimentacoesDesde`) filtram `.is('revertida_em', null)`.
-- **Limites por conta**: 2 mesinhas e 20 itens, impostos por gatilho no banco —
-  o front-end só exibe a mensagem de erro do backend e os contadores "X de N".
+- **Limites por conta**: definidos pela **categoria da conta** (tabela
+  `categorias` do backend; `unimesinha` = 2 mesinhas/20 itens, `desenvolvedor`
+  = sem limites) e impostos por gatilho no banco — o front-end só exibe a
+  mensagem de erro do backend e os contadores "X de N" (ou "sem limite"),
+  lidos de `perfil.categorias` (embed `profiles → categorias`).
+- **Categorias de conta**: a categoria aparece na aba Perfil
+  (`perfil.categorias.nome`). A aba **Desenvolvedor** (`/desenvolvedor`,
+  `DesenvolvedorPage`) só aparece no menu e só renderiza para
+  `perfil.categoria_id === 'desenvolvedor'` — mas isso é UX: quem barra de
+  verdade é o backend (RPCs `admin_listar_usuarios`, `admin_alterar_categoria`
+  e `admin_remover_usuario`, restritas a desenvolvedores no corpo). Na tela, o
+  desenvolvedor lista todas as contas, muda a categoria das outras (nunca a
+  própria) e remove contas (soft delete, dupla confirmação).
 - **Conta arquivada/removida**: o `Layout` mostra um aviso com "Desarquivar
   conta" quando `perfil.status === 'arquivada'`; o `App` bloqueia tudo com a
   tela "Conta removida" quando `status === 'removida'` (o RLS já escondeu os
