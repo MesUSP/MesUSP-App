@@ -52,6 +52,26 @@ públicas; a `service_role` nunca entra no frontend.
 - **Autorização fica no banco (RLS)**: a camada `src/lib/api.ts` confia nas
   políticas do backend; o frontend não filtra dados por segurança, só por UX.
 
+## Estados, reversões e conta
+
+- **Arquivar vs. remover** (mesinha, item, listagem e conta): arquivado some do
+  aplicativo mas o dono vê e pode desarquivar; removido some até para o dono
+  (soft delete — a linha fica no banco, mas a API nunca a retorna, então o
+  front-end não precisa filtrar nada além de `status === 'arquivada'`).
+  Operações com cascata são RPCs do backend (`remover_mesinha`,
+  `arquivar_item`, `remover_item`, `arquivar_conta`, `desarquivar_conta`,
+  `remover_conta`); arquivar mesinha e desarquivar item são update de `status`.
+- **Reversão de movimentações**: `reverter_reposicao/venda/perda` (RPCs).
+  A linha continua no histórico com `revertida_em` preenchido (a UI atenua a
+  linha e mostra a etiqueta "revertida"); o estoque é estornado pelo backend.
+  Relatórios (`movimentacoesDesde`) filtram `.is('revertida_em', null)`.
+- **Limites por conta**: 2 mesinhas e 20 itens, impostos por gatilho no banco —
+  o front-end só exibe a mensagem de erro do backend e os contadores "X de N".
+- **Conta arquivada/removida**: o `Layout` mostra um aviso com "Desarquivar
+  conta" quando `perfil.status === 'arquivada'`; o `App` bloqueia tudo com a
+  tela "Conta removida" quando `status === 'removida'` (o RLS já escondeu os
+  dados; a tela é só UX). Gestão da conta fica em Perfil.
+
 ## Fluxo de autenticação
 
 - Cadastro envia `emailRedirectTo = window.location.origin` e, quando a
