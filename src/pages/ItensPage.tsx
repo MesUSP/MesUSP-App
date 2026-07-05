@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { atualizarItem, criarItem, listarMeusItens } from '../lib/api';
+import {
+  arquivarItem,
+  atualizarItem,
+  criarItem,
+  listarMeusItens,
+  removerItem,
+} from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import type { Item } from '../types';
 
@@ -75,13 +81,47 @@ export function ItensPage() {
     }
   }
 
+  async function executar(acao: () => Promise<void>) {
+    setErro(null);
+    try {
+      await acao();
+      await carregar();
+    } catch (excecao) {
+      setErro(excecao instanceof Error ? excecao.message : String(excecao));
+    }
+  }
+
+  function aoArquivar(item: Item) {
+    if (
+      window.confirm(
+        `Arquivar “${item.nome}”? Ele sairá das mesinhas em que está listado, mas continuará visível para você.`,
+      )
+    ) {
+      void executar(() => arquivarItem(item.id));
+    }
+  }
+
+  function aoRemover(item: Item) {
+    if (
+      window.confirm(
+        `Remover “${item.nome}”? Ele desaparecerá do aplicativo para todos, inclusive você, junto com as listagens dele — sem volta.`,
+      )
+    ) {
+      void executar(() => removerItem(item.id));
+    }
+  }
+
+  const ativos = (itens ?? []).filter((item) => item.status === 'ativo');
+  const arquivados = (itens ?? []).filter((item) => item.status === 'arquivado');
+
   return (
     <>
       <div className="cabecalho-pagina">
         <div>
           <h1>Meus itens</h1>
           <p className="subtitulo">
-            Produtos que você vende. Um mesmo item pode ser listado em várias mesinhas.
+            Produtos que você vende. Um mesmo item pode ser listado em várias mesinhas. Você usa{' '}
+            {(itens ?? []).length} de 20 itens da sua conta.
           </p>
         </div>
         <button type="button" className="botao" onClick={iniciarCriacao}>
@@ -156,27 +196,91 @@ export function ItensPage() {
           </p>
         </div>
       ) : (
-        <div className="grade">
-          {itens.map((item) => (
-            <div key={item.id} className="cartao">
-              <div className="linha-flex">
-                <h2 style={{ marginBottom: 0 }}>{item.nome}</h2>
-                <span className="espacador" />
-                <span className="etiqueta">{item.categoria}</span>
-              </div>
-              <p className="subtitulo" style={{ margin: '0.4rem 0' }}>
-                {item.descricao || 'Sem descrição.'}
-              </p>
-              <button
-                type="button"
-                className="botao botao-secundario botao-pequeno"
-                onClick={() => iniciarEdicao(item)}
-              >
-                Editar
-              </button>
+        <>
+          {ativos.length === 0 ? (
+            <div className="cartao">
+              <p>Nenhum item ativo.</p>
             </div>
-          ))}
-        </div>
+          ) : (
+            <div className="grade">
+              {ativos.map((item) => (
+                <div key={item.id} className="cartao">
+                  <div className="linha-flex">
+                    <h2 style={{ marginBottom: 0 }}>{item.nome}</h2>
+                    <span className="espacador" />
+                    <span className="etiqueta">{item.categoria}</span>
+                  </div>
+                  <p className="subtitulo" style={{ margin: '0.4rem 0' }}>
+                    {item.descricao || 'Sem descrição.'}
+                  </p>
+                  <div className="linha-flex">
+                    <button
+                      type="button"
+                      className="botao botao-secundario botao-pequeno"
+                      onClick={() => iniciarEdicao(item)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="botao botao-fantasma botao-pequeno"
+                      onClick={() => aoArquivar(item)}
+                    >
+                      Arquivar
+                    </button>
+                    <button
+                      type="button"
+                      className="botao botao-perigo botao-pequeno"
+                      onClick={() => aoRemover(item)}
+                    >
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {arquivados.length > 0 && (
+            <div className="secao">
+              <h2>Itens arquivados</h2>
+              <p className="subtitulo">
+                Fora das mesinhas e do cardápio; visíveis apenas para você. Desarquivar não reativa
+                as listagens: reative cada uma na página da listagem.
+              </p>
+              <div className="grade">
+                {arquivados.map((item) => (
+                  <div key={item.id} className="cartao">
+                    <div className="linha-flex">
+                      <h2 style={{ marginBottom: 0 }}>{item.nome}</h2>
+                      <span className="espacador" />
+                      <span className="etiqueta">arquivado</span>
+                    </div>
+                    <p className="subtitulo" style={{ margin: '0.4rem 0' }}>
+                      {item.descricao || 'Sem descrição.'}
+                    </p>
+                    <div className="linha-flex">
+                      <button
+                        type="button"
+                        className="botao botao-secundario botao-pequeno"
+                        onClick={() => void executar(() => atualizarItem(item.id, { status: 'ativo' }))}
+                      >
+                        Desarquivar
+                      </button>
+                      <button
+                        type="button"
+                        className="botao botao-perigo botao-pequeno"
+                        onClick={() => aoRemover(item)}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );
