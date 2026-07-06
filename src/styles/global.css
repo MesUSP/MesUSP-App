@@ -116,8 +116,12 @@ a { color: var(--cor-link); }
 /* Estrutura                                                           */
 /* ------------------------------------------------------------------ */
 
+/* 100dvh acompanha a barra de navegação dos navegadores mobile (100vh ignora
+   a barra e deixava o fim da página escondido atrás dela, ex.: Firefox
+   Android); a linha com vh é o fallback para navegadores sem dvh. */
 .aplicacao {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -462,6 +466,7 @@ td.numero, th.numero { text-align: right; }
 
 .pagina-centralizada {
   min-height: 100vh;
+  min-height: 100dvh; /* ver comentário em .aplicacao */
   display: flex;
   align-items: center;
   justify-content: center;
