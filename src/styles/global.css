@@ -656,8 +656,28 @@ td.numero, th.numero { text-align: right; }
 /* ------------------------------------------------------------------ */
 
 @media (max-width: 640px) {
-  .cabecalho-conteudo { padding: 0.5rem 0.75rem; }
+  .cabecalho-conteudo { padding: 0.5rem 0.75rem; row-gap: 0.35rem; }
   .nome-usuario { display: none; }
+  .cabecalho-usuario { margin-left: auto; }
+
+  /* Em telas estreitas os links não cabem ao lado da marca e empilhavam em
+     várias linhas, deixando o cabeçalho enorme. A navegação vira uma linha
+     única rolável na horizontal, abaixo da marca (o Sair fica ao lado dela). */
+  .navegacao {
+    order: 1;
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .navegacao::-webkit-scrollbar { display: none; }
+
+  .navegacao a {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   h1 { font-size: 1.35rem; }
   .conteudo { padding: 1rem 0.75rem 2.5rem; }
 }

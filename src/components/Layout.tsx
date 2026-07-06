@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Link, useRoteador } from '../router';
 import { useAuth } from '../context/AuthContext';
 import { desarquivarConta } from '../lib/api';
@@ -18,8 +18,17 @@ const LINK_DESENVOLVEDOR = { para: '/desenvolvedor', rotulo: 'Desenvolvedor' };
 export function Layout({ children }: { children: ReactNode }) {
   const { caminho } = useRoteador();
   const { perfil, sair, recarregarPerfil } = useAuth();
+  const navegacaoRef = useRef<HTMLElement>(null);
   const links =
     perfil?.categoria_id === 'desenvolvedor' ? [...LINKS, LINK_DESENVOLVEDOR] : LINKS;
+
+  // No mobile a navegação é uma linha única rolável: mantém o link da página
+  // atual à vista. No desktop (sem rolagem) não tem efeito.
+  useEffect(() => {
+    navegacaoRef.current
+      ?.querySelector('.ativo')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [caminho]);
 
   return (
     <div className="aplicacao">
@@ -43,7 +52,7 @@ export function Layout({ children }: { children: ReactNode }) {
           <Link para="/" className="marca">
             <span aria-hidden="true">▦</span> UniMesinha
           </Link>
-          <nav className="navegacao" aria-label="Navegação principal">
+          <nav className="navegacao" aria-label="Navegação principal" ref={navegacaoRef}>
             {links.map((link) => (
               <Link
                 key={link.para}
