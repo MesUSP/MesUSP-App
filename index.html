@@ -12,6 +12,18 @@
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>UniMesinha</title>
+    <script>
+      // Aplica o tema salvo antes da primeira pintura para não piscar o tema
+      // errado. A lógica completa fica em src/lib/tema.ts.
+      try {
+        var tema = localStorage.getItem('unimesinha.tema');
+        if (tema === 'claro' || tema === 'escuro') {
+          document.documentElement.dataset.tema = tema;
+        }
+      } catch (erro) {
+        /* Sem localStorage o tema segue o do dispositivo. */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

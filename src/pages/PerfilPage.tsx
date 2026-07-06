@@ -1,9 +1,21 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { arquivarConta, desarquivarConta, removerConta } from '../lib/api';
+import {
+  definirPreferenciaTema,
+  usePreferenciaTema,
+  type PreferenciaTema,
+} from '../lib/tema';
+
+const OPCOES_TEMA: { valor: PreferenciaTema; rotulo: string }[] = [
+  { valor: 'sistema', rotulo: 'Sistema' },
+  { valor: 'claro', rotulo: 'Claro' },
+  { valor: 'escuro', rotulo: 'Escuro' },
+];
 
 export function PerfilPage() {
   const { perfil, atualizarPerfil, recarregarPerfil, sair } = useAuth();
+  const preferenciaTema = usePreferenciaTema();
   const [nome, setNome] = useState('');
   const [chavePix, setChavePix] = useState('');
   const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null);
@@ -85,6 +97,28 @@ export function PerfilPage() {
             {salvando ? 'Salvando…' : 'Salvar'}
           </button>
         </form>
+      </div>
+
+      <div className="cartao" style={{ maxWidth: 480, marginTop: '1rem' }}>
+        <h2>Aparência</h2>
+        <p className="subtitulo">
+          Com a opção Sistema, o aplicativo acompanha o tema claro ou escuro do dispositivo. A
+          escolha vale para este aparelho.
+        </p>
+        <div className="abas" role="tablist" aria-label="Tema do aplicativo">
+          {OPCOES_TEMA.map((opcao) => (
+            <button
+              key={opcao.valor}
+              type="button"
+              role="tab"
+              aria-selected={preferenciaTema === opcao.valor}
+              className={preferenciaTema === opcao.valor ? 'ativa' : undefined}
+              onClick={() => definirPreferenciaTema(opcao.valor)}
+            >
+              {opcao.rotulo}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="cartao" style={{ maxWidth: 480, marginTop: '1rem' }}>

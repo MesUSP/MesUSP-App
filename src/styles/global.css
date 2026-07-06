@@ -1,10 +1,21 @@
 /* Estilo global do UniMesinha — visual moderno e minimalista (RNF-UI-01),
-   responsivo para desktop e celular (RNF-RESP-01). */
+   responsivo para desktop e celular (RNF-RESP-01).
+
+   Temas: a paleta clara fica em :root; a escura é aplicada quando o
+   dispositivo prefere escuro (modo "sistema", sem data-tema ou com
+   data-tema="sistema") ou quando o usuário força data-tema="escuro" na
+   página de perfil. Os dois blocos escuros devem permanecer idênticos. */
 
 :root {
+  color-scheme: light;
   --cor-primaria: #0f766e;
   --cor-primaria-escura: #115e59;
   --cor-primaria-clara: #ccfbf1;
+  /* Links e a marca: igual à primária no claro, mais viva no escuro. */
+  --cor-link: #0f766e;
+  /* Texto sobre fundos --cor-primaria-clara (navegação ativa, etiquetas). */
+  --cor-primaria-texto: #115e59;
+  --cor-secundaria-hover: #99f6e4;
   --cor-fundo: #f8fafc;
   --cor-superficie: #ffffff;
   --cor-texto: #0f172a;
@@ -12,12 +23,67 @@
   --cor-borda: #e2e8f0;
   --cor-erro: #b91c1c;
   --cor-erro-fundo: #fef2f2;
+  --cor-erro-borda: #fecaca;
+  --cor-erro-hover: #fee2e2;
   --cor-sucesso: #15803d;
   --cor-sucesso-fundo: #f0fdf4;
+  --cor-sucesso-borda: #bbf7d0;
   --cor-alerta: #b45309;
   --cor-alerta-fundo: #fffbeb;
   --raio: 12px;
   --sombra: 0 1px 3px rgb(15 23 42 / 8%), 0 4px 16px rgb(15 23 42 / 6%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema='claro']) {
+    color-scheme: dark;
+    --cor-primaria: #0f766e;
+    --cor-primaria-escura: #0d9488;
+    --cor-primaria-clara: #134e4a;
+    --cor-link: #2dd4bf;
+    --cor-primaria-texto: #5eead4;
+    --cor-secundaria-hover: #115e59;
+    --cor-fundo: #0f172a;
+    --cor-superficie: #1e293b;
+    --cor-texto: #e2e8f0;
+    --cor-texto-suave: #94a3b8;
+    --cor-borda: #334155;
+    --cor-erro: #fca5a5;
+    --cor-erro-fundo: #450a0a;
+    --cor-erro-borda: #7f1d1d;
+    --cor-erro-hover: #5c1313;
+    --cor-sucesso: #86efac;
+    --cor-sucesso-fundo: #052e16;
+    --cor-sucesso-borda: #14532d;
+    --cor-alerta: #fcd34d;
+    --cor-alerta-fundo: #451a03;
+    --sombra: 0 1px 3px rgb(0 0 0 / 40%), 0 4px 16px rgb(0 0 0 / 30%);
+  }
+}
+
+:root[data-tema='escuro'] {
+  color-scheme: dark;
+  --cor-primaria: #0f766e;
+  --cor-primaria-escura: #0d9488;
+  --cor-primaria-clara: #134e4a;
+  --cor-link: #2dd4bf;
+  --cor-primaria-texto: #5eead4;
+  --cor-secundaria-hover: #115e59;
+  --cor-fundo: #0f172a;
+  --cor-superficie: #1e293b;
+  --cor-texto: #e2e8f0;
+  --cor-texto-suave: #94a3b8;
+  --cor-borda: #334155;
+  --cor-erro: #fca5a5;
+  --cor-erro-fundo: #450a0a;
+  --cor-erro-borda: #7f1d1d;
+  --cor-erro-hover: #5c1313;
+  --cor-sucesso: #86efac;
+  --cor-sucesso-fundo: #052e16;
+  --cor-sucesso-borda: #14532d;
+  --cor-alerta: #fcd34d;
+  --cor-alerta-fundo: #451a03;
+  --sombra: 0 1px 3px rgb(0 0 0 / 40%), 0 4px 16px rgb(0 0 0 / 30%);
 }
 
 * {
@@ -44,7 +110,7 @@ h3 { font-size: 1.05rem; }
 
 p { margin: 0 0 0.75rem; }
 
-a { color: var(--cor-primaria); }
+a { color: var(--cor-link); }
 
 /* ------------------------------------------------------------------ */
 /* Estrutura                                                           */
@@ -78,7 +144,7 @@ a { color: var(--cor-primaria); }
   font-weight: 700;
   font-size: 1.1rem;
   text-decoration: none;
-  color: var(--cor-primaria);
+  color: var(--cor-link);
   white-space: nowrap;
 }
 
@@ -100,7 +166,7 @@ a { color: var(--cor-primaria); }
 .navegacao a.ativo,
 .navegacao a:hover {
   background: var(--cor-primaria-clara);
-  color: var(--cor-primaria-escura);
+  color: var(--cor-primaria-texto);
 }
 
 .cabecalho-usuario {
@@ -238,9 +304,9 @@ a { color: var(--cor-primaria); }
 .campo input:focus,
 .campo select:focus,
 .campo textarea:focus {
-  outline: 2px solid var(--cor-primaria);
+  outline: 2px solid var(--cor-link);
   outline-offset: 1px;
-  border-color: var(--cor-primaria);
+  border-color: var(--cor-link);
 }
 
 .formulario-linha {
@@ -266,10 +332,10 @@ a { color: var(--cor-primaria); }
 
 .botao-secundario {
   background: var(--cor-primaria-clara);
-  color: var(--cor-primaria-escura);
+  color: var(--cor-primaria-texto);
 }
 
-.botao-secundario:hover:not(:disabled) { background: #99f6e4; }
+.botao-secundario:hover:not(:disabled) { background: var(--cor-secundaria-hover); }
 
 .botao-fantasma {
   background: transparent;
@@ -282,10 +348,10 @@ a { color: var(--cor-primaria); }
 .botao-perigo {
   background: var(--cor-erro-fundo);
   color: var(--cor-erro);
-  border: 1px solid #fecaca;
+  border: 1px solid var(--cor-erro-borda);
 }
 
-.botao-perigo:hover:not(:disabled) { background: #fee2e2; }
+.botao-perigo:hover:not(:disabled) { background: var(--cor-erro-hover); }
 
 .botao-pequeno {
   padding: 0.3rem 0.7rem;
@@ -307,13 +373,13 @@ a { color: var(--cor-primaria); }
 .mensagem-erro {
   background: var(--cor-erro-fundo);
   color: var(--cor-erro);
-  border: 1px solid #fecaca;
+  border: 1px solid var(--cor-erro-borda);
 }
 
 .mensagem-sucesso {
   background: var(--cor-sucesso-fundo);
   color: var(--cor-sucesso);
-  border: 1px solid #bbf7d0;
+  border: 1px solid var(--cor-sucesso-borda);
 }
 
 .etiqueta {
@@ -328,7 +394,7 @@ a { color: var(--cor-primaria); }
   white-space: nowrap;
 }
 
-.etiqueta-primaria { background: var(--cor-primaria-clara); color: var(--cor-primaria-escura); border-color: transparent; }
+.etiqueta-primaria { background: var(--cor-primaria-clara); color: var(--cor-primaria-texto); border-color: transparent; }
 .etiqueta-alerta { background: var(--cor-alerta-fundo); color: var(--cor-alerta); border-color: transparent; }
 .etiqueta-sucesso { background: var(--cor-sucesso-fundo); color: var(--cor-sucesso); border-color: transparent; }
 .etiqueta-erro { background: var(--cor-erro-fundo); color: var(--cor-erro); border-color: transparent; }
@@ -385,8 +451,8 @@ td.numero, th.numero { text-align: right; }
 }
 
 .abas button.ativa {
-  color: var(--cor-primaria-escura);
-  border-bottom-color: var(--cor-primaria);
+  color: var(--cor-primaria-texto);
+  border-bottom-color: var(--cor-link);
   font-weight: 600;
 }
 
@@ -504,8 +570,11 @@ td.numero, th.numero { text-align: right; }
 /* Impressão (RF-MENU-03/04/05)                                         */
 /* ------------------------------------------------------------------ */
 
+/* A folha impressa é sempre clara, mesmo com o aplicativo no tema escuro:
+   ela representa o papel que sai da impressora. */
 .folha-a4 {
   background: #fff;
+  color: #0f172a;
   max-width: 210mm;
   margin: 0 auto;
   padding: 12mm;
@@ -536,6 +605,27 @@ td.numero, th.numero { text-align: right; }
 .so-imprimir { display: none !important; }
 
 @media print {
+  /* O papel é sempre claro: força a paleta clara qualquer que seja o tema.
+     O seletor repete a especificidade dos blocos escuros ((0,2,0)) e vem
+     depois deles no arquivo, então vence nos dois modos. */
+  :root:not([data-tema='claro']) {
+    color-scheme: light;
+    --cor-primaria-clara: #ccfbf1;
+    --cor-link: #0f766e;
+    --cor-primaria-texto: #115e59;
+    --cor-fundo: #ffffff;
+    --cor-superficie: #ffffff;
+    --cor-texto: #0f172a;
+    --cor-texto-suave: #64748b;
+    --cor-borda: #e2e8f0;
+    --cor-erro: #b91c1c;
+    --cor-erro-fundo: #fef2f2;
+    --cor-sucesso: #15803d;
+    --cor-sucesso-fundo: #f0fdf4;
+    --cor-alerta: #b45309;
+    --cor-alerta-fundo: #fffbeb;
+  }
+
   body { background: #fff; }
   .nao-imprimir { display: none !important; }
   .so-imprimir { display: block !important; }
