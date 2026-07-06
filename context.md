@@ -122,11 +122,16 @@ públicas; a `service_role` nunca entra no frontend.
 
 - **Cache do service worker**: ao testar uma versão nova em aparelho que já
   abriu o site, recarregue a página para o SW atualizado assumir.
-- **`100vh` em navegador mobile**: a barra de navegação do Firefox/Chrome
-  Android não entra na conta do `100vh`, então containers de tela cheia
-  deixavam o fim da página escondido atrás dela (parecia um "footer" cortando
-  o conteúdo). Alturas de tela cheia usam `min-height: 100dvh` com fallback
-  `100vh` (`.aplicacao`, `.pagina-centralizada`).
+- **Barra de navegação dos navegadores mobile cobrindo o fim da página**
+  (parecia um "footer" cortando o conteúdo). Dois casos, duas defesas:
+  1. *Páginas curtas*: `100vh` não conta a barra, então containers de tela
+     cheia usam `min-height: 100dvh` com fallback `100vh` (`.aplicacao`,
+     `.pagina-centralizada`).
+  2. *Páginas altas*: quando a barra não se recolhe (ex.: Firefox Android com
+     barra fixa), ela fica sobreposta ao fim do documento. Em aparelhos de
+     toque (`@media screen and (pointer: coarse)`), `.conteudo` e
+     `.cardapio-publico` terminam com `padding-bottom: 6rem`, folga maior que
+     a barra (~56–63px).
 - **Navegação do cabeçalho no mobile**: é uma linha única rolável
   (`overflow-x: auto`, sem scrollbar) abaixo da marca; o `Layout` rola o link
   ativo para a vista a cada navegação. Sem isso os links empilhavam em várias
