@@ -66,10 +66,12 @@ públicas; a `service_role` nunca entra no frontend.
   linha e mostra a etiqueta "revertida"); o estoque é estornado pelo backend.
   Relatórios (`movimentacoesDesde`) filtram `.is('revertida_em', null)`.
 - **Limites por conta**: definidos pela **categoria da conta** (tabela
-  `categorias` do backend; `unimesinha` = 2 mesinhas/20 itens, `desenvolvedor`
-  = sem limites) e impostos por gatilho no banco — o front-end só exibe a
-  mensagem de erro do backend e os contadores "X de N" (ou "sem limite"),
-  lidos de `perfil.categorias` (embed `profiles → categorias`).
+  `categorias` do backend; `unimesinha` = 2 mesinhas/20 itens,
+  `unimesinha_ilimitada` e `desenvolvedor` = sem limites) e impostos por
+  gatilho no banco — o front-end só exibe a mensagem de erro do backend e os
+  contadores "X de N" (ou "sem limite"), lidos de `perfil.categorias`
+  (embed `profiles → categorias`). Categorias novas aparecem sozinhas na tela
+  de desenvolvedor (o seletor lê a tabela `categorias`).
 - **Categorias de conta**: a categoria aparece na aba Perfil
   (`perfil.categorias.nome`). A aba **Desenvolvedor** (`/desenvolvedor`,
   `DesenvolvedorPage`) só aparece no menu e só renderiza para
@@ -82,6 +84,29 @@ públicas; a `service_role` nunca entra no frontend.
   conta" quando `perfil.status === 'arquivada'`; o `App` bloqueia tudo com a
   tela "Conta removida" quando `status === 'removida'` (o RLS já escondeu os
   dados; a tela é só UX). Gestão da conta fica em Perfil.
+- **Conta removida pode ser recriada**: o backend apaga o usuário do Auth ao
+  remover a conta (pelo Perfil ou pela tela de desenvolvedor), então o e-mail
+  fica livre — um novo cadastro com ele é um signup normal e o e-mail de
+  confirmação chega em toda criação/recriação. A tela "Conta removida" só
+  aparece para quem ainda carrega uma sessão antiga. (Antes a linha de
+  `auth.users` sobrava: o novo cadastro caía na resposta ofuscada do GoTrue,
+  sem e-mail, e o login voltava na tela "Conta removida".)
+
+## Tema claro/escuro
+
+- Por padrão o aplicativo **acompanha o tema do dispositivo**
+  (`prefers-color-scheme`); na aba Perfil (cartão "Aparência") dá para forçar
+  Sistema, Claro ou Escuro. A escolha fica no `localStorage`
+  (`unimesinha.tema`) — é por aparelho, não viaja com a conta.
+- Implementação: `src/lib/tema.ts` aplica `data-tema` em `<html>` e mantém o
+  `meta theme-color`; as paletas vivem em variáveis CSS no `global.css`
+  (claro em `:root`; escuro duplicado em `@media (prefers-color-scheme: dark)
+  :root:not([data-tema='claro'])` e `:root[data-tema='escuro']` — manter os
+  dois blocos idênticos). Um script inline no `index.html` aplica o atributo
+  antes da primeira pintura (sem flash).
+- **Impressão e folha A4 são sempre claras** (representam o papel): o
+  `@media print` força a paleta clara. QR codes têm fundo branco explícito e
+  continuam escaneáveis no tema escuro.
 
 ## Fluxo de autenticação
 
