@@ -681,3 +681,16 @@ td.numero, th.numero { text-align: right; }
   h1 { font-size: 1.35rem; }
   .conteudo { padding: 1rem 0.75rem 2.5rem; }
 }
+
+/* Em páginas mais altas que a tela, navegadores mobile podem manter a barra
+   de navegação sobreposta ao fim do documento (a rolagem não compensa a barra
+   quando ela não se recolhe — ex.: Firefox Android com a barra fixa, ou o
+   gesto final que a faz reaparecer). Em aparelhos de toque, o miolo termina
+   com folga maior que a barra (~56–63px) para o último conteúdo nunca ficar
+   escondido. `screen` evita interferir na impressão (que zera o padding). */
+@media screen and (pointer: coarse) {
+  .conteudo,
+  .cardapio-publico {
+    padding-bottom: 6rem;
+  }
+}
