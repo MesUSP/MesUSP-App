@@ -179,7 +179,7 @@ export function PerfilPage() {
             onClick={() => {
               const confirmado =
                 window.confirm(
-                  'Remover sua conta? Suas mesinhas, itens, listagens e histórico desaparecerão do aplicativo para todos — inclusive para você — e NÃO poderão ser recuperados.',
+                  'Remover sua conta? Suas mesinhas, itens, listagens e histórico desaparecerão do aplicativo para todos — inclusive para você — e NÃO poderão ser recuperados. Você poderá criar uma conta nova (com este ou outro e-mail), mas ela começará vazia.',
                 ) && window.confirm('Tem certeza? Esta ação não pode ser desfeita.');
               if (!confirmado) return;
               setMensagemConta(null);

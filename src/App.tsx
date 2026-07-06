@@ -84,6 +84,8 @@ export function App() {
     }
 
     // Conta removida: os dados sumiram do app para o próprio dono (soft delete).
+    // A remoção também apaga o usuário do Auth, então esta tela só aparece para
+    // quem ainda carrega uma sessão antiga; o e-mail já está livre para recriar.
     if (perfil?.status === 'removida') {
       return (
         <div className="pagina-centralizada">
@@ -91,6 +93,7 @@ export function App() {
             <h1>Conta removida</h1>
             <p className="subtitulo">
               Esta conta foi removida e os dados dela não estão mais disponíveis no aplicativo.
+              Se quiser recomeçar, você pode criar uma conta nova com o mesmo e-mail.
             </p>
             <button type="button" className="botao" onClick={() => void sair()}>
               Sair

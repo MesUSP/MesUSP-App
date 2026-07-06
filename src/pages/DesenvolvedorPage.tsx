@@ -66,7 +66,7 @@ export function DesenvolvedorPage() {
   function aoRemover(usuario: UsuarioAdmin) {
     const confirmado =
       window.confirm(
-        `Remover a conta de ${usuario.nome} (${usuario.email})? As mesinhas, itens e listagens dela desaparecerão do aplicativo para todos — inclusive para a própria pessoa — e NÃO poderão ser recuperados pelo aplicativo.`,
+        `Remover a conta de ${usuario.nome} (${usuario.email})? As mesinhas, itens e listagens dela desaparecerão do aplicativo para todos — inclusive para a própria pessoa — e NÃO poderão ser recuperados pelo aplicativo. A pessoa poderá criar uma conta nova com o mesmo e-mail, começando do zero.`,
       ) && window.confirm('Tem certeza? Esta ação não pode ser desfeita.');
     if (!confirmado) return;
     void executar(() => removerUsuarioAdmin(usuario.id));
