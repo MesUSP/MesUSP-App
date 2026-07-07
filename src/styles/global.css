@@ -275,9 +275,9 @@ a { color: var(--cor-link); }
 .indicador .valor.negativo { color: var(--cor-erro); }
 .indicador .valor.positivo { color: var(--cor-sucesso); }
 
-/* Relatórios avançados: seta de comparação com o período anterior.
-   Aponta para cima quando a métrica foi maior no período anterior; verde
-   quando a tendência indica maior saldo, vermelho quando indica menor. */
+/* Relatórios avançados: seta da tendência atual frente ao período anterior.
+   Aponta para cima quando a métrica está maior agora; verde quando a
+   tendência é favorável ao saldo, vermelho quando desfavorável. */
 .tendencia {
   margin-left: 0.35rem;
   font-size: 1.05rem;
@@ -288,16 +288,6 @@ a { color: var(--cor-link); }
 
 .tendencia-boa { color: var(--cor-sucesso); }
 .tendencia-ruim { color: var(--cor-erro); }
-
-.nota-avancada {
-  margin: 0 0 1rem;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--cor-primaria-clara);
-  border-radius: 10px;
-  background: var(--cor-superficie);
-  color: var(--cor-texto-suave);
-  font-size: 0.88rem;
-}
 
 .filtros-relatorio {
   display: flex;

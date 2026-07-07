@@ -162,15 +162,6 @@ export function RelatoriosPage() {
         </div>
       </div>
 
-      {avancado && perfil?.categorias && (
-        <p className="nota-avancada">
-          <span className="etiqueta etiqueta-primaria">{perfil.categorias.nome}</span> Sua
-          categoria inclui relatórios avançados: setas comparam cada métrica com o período
-          anterior (verde = tendência de maior saldo, vermelho = de menor saldo), e cada seção
-          tem filtros por categoria de item e por item, reposição recomendada e lista de compras.
-        </p>
-      )}
-
       {erro && <p className="mensagem-erro">{erro}</p>}
       {!erro && (carregandoBasico || carregandoAvancado) && (
         <p className="subtitulo">Carregando…</p>
@@ -490,9 +481,9 @@ function PainelResumo({
 }
 
 /**
- * Seta de comparação com o período anterior: aponta para cima quando a
- * métrica foi MAIOR no período anterior; verde quando essa tendência indica
- * maior saldo, vermelho quando indica menor saldo.
+ * Seta da tendência ATUAL em relação ao período anterior: aponta para cima
+ * quando a métrica está maior agora; verde quando a tendência é favorável ao
+ * saldo (ex.: receita subindo, slippage caindo), vermelho quando desfavorável.
  */
 function Tendencia({
   nome,
@@ -506,9 +497,9 @@ function Tendencia({
   bomQuandoMaior: boolean;
 }) {
   if (Math.abs(anterior - atual) < 0.005) return null;
-  const anteriorMaior = anterior > atual;
-  const boa = anteriorMaior === bomQuandoMaior;
-  const rotulo = `${nome} ${anteriorMaior ? 'maior' : 'menor'} no período anterior (${formatarMoeda(anterior)})`;
+  const atualMaior = atual > anterior;
+  const boa = atualMaior === bomQuandoMaior;
+  const rotulo = `${nome} ${atualMaior ? 'maior' : 'menor'} que no período anterior (antes: ${formatarMoeda(anterior)})`;
   return (
     <span
       className={`tendencia ${boa ? 'tendencia-boa' : 'tendencia-ruim'}`}
@@ -516,7 +507,7 @@ function Tendencia({
       aria-label={rotulo}
       title={rotulo}
     >
-      {anteriorMaior ? '↑' : '↓'}
+      {atualMaior ? '↑' : '↓'}
     </span>
   );
 }
