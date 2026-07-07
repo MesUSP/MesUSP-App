@@ -275,6 +275,43 @@ a { color: var(--cor-link); }
 .indicador .valor.negativo { color: var(--cor-erro); }
 .indicador .valor.positivo { color: var(--cor-sucesso); }
 
+/* Relatórios avançados: seta de comparação com o período anterior.
+   Aponta para cima quando a métrica foi maior no período anterior; verde
+   quando a tendência indica maior saldo, vermelho quando indica menor. */
+.tendencia {
+  margin-left: 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  vertical-align: 0.05em;
+  cursor: help;
+}
+
+.tendencia-boa { color: var(--cor-sucesso); }
+.tendencia-ruim { color: var(--cor-erro); }
+
+.nota-avancada {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--cor-primaria-clara);
+  border-radius: 10px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto-suave);
+  font-size: 0.88rem;
+}
+
+.filtros-relatorio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0.9rem;
+}
+
+.filtros-relatorio .campo {
+  flex: 1;
+  min-width: 190px;
+  max-width: 320px;
+}
+
 /* ------------------------------------------------------------------ */
 /* Formulários                                                          */
 /* ------------------------------------------------------------------ */
@@ -329,6 +366,13 @@ a { color: var(--cor-link); }
   background: var(--cor-primaria);
   color: #fff;
   transition: background 0.15s ease;
+}
+
+/* Links estilizados como botão (ex.: "Lista de compras" nos relatórios). */
+a.botao {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
 }
 
 .botao:hover:not(:disabled) { background: var(--cor-primaria-escura); }

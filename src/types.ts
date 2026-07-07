@@ -16,6 +16,13 @@ export interface Categoria {
   nome: string;
   limite_mesinhas: number | null;
   limite_itens: number | null;
+  /**
+   * Acesso aos relatórios avançados (comparação com o período anterior,
+   * filtros por item/categoria, reposição recomendada e lista de compras).
+   * Aqui é só UX: quem barra de verdade é o corpo das RPCs do backend.
+   * Opcional para tolerar um backend anterior à migração relatorios_avancados.
+   */
+  relatorios_avancados?: boolean;
 }
 
 export interface Profile {
@@ -158,6 +165,29 @@ export interface CardapioItem {
   disponivel: boolean;
   vendedor_nome: string;
   vendedor_pix: string | null;
+}
+
+/**
+ * Linha da RPC relatorio_resumo (relatórios avançados): agregados do período
+ * atual e do anterior, para a comparação por setas.
+ */
+export interface ResumoRelatorio {
+  periodo: 'atual' | 'anterior';
+  receita: number;
+  gastos: number;
+  slippage_pagamento: number;
+  slippage_perdas: number;
+}
+
+/** Linha da RPC lista_compras (relatórios avançados). */
+export interface LinhaListaCompras {
+  mesinha_id: string;
+  mesinha_nome: string;
+  item_id: string;
+  item_nome: string;
+  item_categoria: string;
+  estoque_atual: number;
+  reposicao_recomendada: number;
 }
 
 export interface ReconciliacaoListagem {

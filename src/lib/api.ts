@@ -8,6 +8,7 @@ import type {
   Categoria,
   ConexaoGoogle,
   Item,
+  LinhaListaCompras,
   Listagem,
   Mesinha,
   MesinhaMembro,
@@ -15,10 +16,12 @@ import type {
   Preco,
   ReconciliacaoListagem,
   Reposicao,
+  ResumoRelatorio,
   TipoMesinha,
   UsuarioAdmin,
   Venda,
 } from '../types';
+import type { Periodo } from './format';
 
 function garantir<T>(dados: T | null, erro: { message: string } | null): T {
   if (erro) throw new Error(erro.message);
@@ -332,6 +335,67 @@ export async function movimentacoesDesde(inicio: Date): Promise<MovimentacoesPer
     reposicoes: (reposicoes.data ?? []) as MovimentacoesPeriodo['reposicoes'],
     perdas: (perdas.data ?? []) as MovimentacoesPeriodo['perdas'],
   };
+}
+
+// --------------------------------------------------------------------------
+// Relatórios avançados (RPCs restritas às categorias com
+// relatorios_avancados; o backend barra as demais no corpo das funções)
+// --------------------------------------------------------------------------
+
+export interface FiltrosRelatorio {
+  /** Escopo: uma mesinha do proprietário; ausente = "meus itens". */
+  mesinhaId?: string;
+  /** Categoria de item (ex.: bebidas, doces); ausente = todas. */
+  categoriaItem?: string;
+  /** Item específico do próprio usuário; ausente = todos. */
+  itemId?: string;
+}
+
+/** Agregados do período atual e do anterior, para a comparação por setas. */
+export async function relatorioResumo(
+  periodo: Periodo,
+  filtros: FiltrosRelatorio = {},
+): Promise<{ atual: ResumoRelatorio; anterior: ResumoRelatorio }> {
+  const { data, error } = await supabase.rpc('relatorio_resumo', {
+    p_periodo: periodo,
+    p_mesinha: filtros.mesinhaId ?? null,
+    p_categoria_item: filtros.categoriaItem ?? null,
+    p_item: filtros.itemId ?? null,
+  });
+  const linhas = garantir(data, error) as ResumoRelatorio[];
+  const atual = linhas.find((linha) => linha.periodo === 'atual');
+  const anterior = linhas.find((linha) => linha.periodo === 'anterior');
+  if (!atual || !anterior) throw new Error('Resposta inesperada do relatório.');
+  return { atual, anterior };
+}
+
+/** Quantidade recomendada de reposição de um item do usuário. */
+export async function reposicaoRecomendada(
+  itemId: string,
+  periodo: Periodo,
+  mesinhaId?: string,
+): Promise<number> {
+  const { data, error } = await supabase.rpc('reposicao_recomendada', {
+    p_item: itemId,
+    p_periodo: periodo,
+    p_mesinha: mesinhaId ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? 0) as number;
+}
+
+/** Lista de compras dos itens do usuário (por mesinha), com reposição recomendada. */
+export async function listaCompras(
+  periodo: Periodo,
+  filtros: FiltrosRelatorio = {},
+): Promise<LinhaListaCompras[]> {
+  const { data, error } = await supabase.rpc('lista_compras', {
+    p_periodo: periodo,
+    p_mesinha: filtros.mesinhaId ?? null,
+    p_categoria_item: filtros.categoriaItem ?? null,
+    p_item: filtros.itemId ?? null,
+  });
+  return garantir(data, error) as LinhaListaCompras[];
 }
 
 // --------------------------------------------------------------------------
