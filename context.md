@@ -126,12 +126,13 @@ públicas; a `service_role` nunca entra no frontend.
   comparação com o período anterior e o botão "Lista de compras". Contas sem
   a marca seguem no fluxo antigo (`movimentacoesDesde` + agregação local) e
   não veem nada disso.
-- **Semântica das setas** (`Tendencia`): apontam para onde a métrica estava
-  no período ANTERIOR (↑ = era maior). Verde quando a tendência indica maior
-  saldo, vermelho quando indica menor — ex.: saldo maior no período anterior
-  = ↑ verde; slippage maior no período anterior = ↑ vermelho. A nota
-  `.nota-avancada` no topo explica isso e explicita que é recurso da
-  categoria.
+- **Semântica das setas** (`Tendencia`): indicam a tendência ATUAL frente ao
+  período anterior (↑ = a métrica está maior agora). Verde quando a tendência
+  é favorável ao saldo, vermelho quando desfavorável — ex.: saldo maior agora
+  = ↑ verde; slippage maior agora = ↑ vermelho; slippage menor agora =
+  ↓ verde. (A primeira versão comparava ao contrário — "onde a métrica estava
+  antes" — e foi corrigida a pedido do time; não reintroduzir.) O tooltip da
+  seta traz o valor do período anterior.
 - **Reposição recomendada**: card exibido apenas quando o filtro atual
   resulta em exatamente um item do usuário. O valor vem pronto do backend
   (RPC); o método de cálculo é detalhe interno de lá — não descrever na UI.
