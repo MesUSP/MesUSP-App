@@ -66,12 +66,17 @@ públicas; a `service_role` nunca entra no frontend.
   linha e mostra a etiqueta "revertida"); o estoque é estornado pelo backend.
   Relatórios (`movimentacoesDesde`) filtram `.is('revertida_em', null)`.
 - **Limites por conta**: definidos pela **categoria da conta** (tabela
-  `categorias` do backend; `unimesinha` = 2 mesinhas/20 itens,
-  `unimesinha_ilimitada` e `desenvolvedor` = sem limites) e impostos por
-  gatilho no banco — o front-end só exibe a mensagem de erro do backend e os
-  contadores "X de N" (ou "sem limite"), lidos de `perfil.categorias`
-  (embed `profiles → categorias`). Categorias novas aparecem sozinhas na tela
-  de desenvolvedor (o seletor lê a tabela `categorias`).
+  `categorias` do backend; `unimesinha` = 1 mesinha/15 itens,
+  `unimesinha_ilimitada` = 3 mesinhas/45 itens, `desenvolvedor` = sem
+  limites) e impostos por gatilho no banco — o front-end só exibe a mensagem
+  de erro do backend e os contadores "X de N" (ou "sem limite"), lidos de
+  `perfil.categorias` (embed `profiles → categorias(*)`; usar `*` no embed é
+  intencional: o perfil continua carregando mesmo se o backend ainda não
+  tiver uma coluna nova que o front-end conheça). Categorias novas aparecem
+  sozinhas na tela de desenvolvedor (o seletor lê a tabela `categorias`).
+  Ao **rebaixar** uma conta, o backend arquiva sozinho o excedente ativo e
+  também barra desarquivar acima do limite de ativos — o front-end só mostra
+  as mensagens de erro.
 - **Categorias de conta**: a categoria aparece na aba Perfil
   (`perfil.categorias.nome`). A aba **Desenvolvedor** (`/desenvolvedor`,
   `DesenvolvedorPage`) só aparece no menu e só renderiza para
@@ -108,6 +113,33 @@ públicas; a `service_role` nunca entra no frontend.
   `@media print` força a paleta clara. QR codes têm fundo branco explícito e
   continuam escaneáveis no tema escuro.
 
+## Relatórios avançados (UniMesinha Ilimitada e Desenvolvedor)
+
+- O gate de UX é `perfil.categorias.relatorios_avancados` (booleano vindo do
+  backend); **nunca** comparar `categoria_id` com uma lista fixa. Quem barra
+  de verdade é o corpo das RPCs do backend (`relatorio_resumo`,
+  `reposicao_recomendada`, `lista_compras`) — conta sem a marca recebe erro
+  mesmo chamando a API direto.
+- Na tela de Relatórios, contas com a marca trocam a agregação no cliente
+  pelas RPCs: cada seção (Meus itens e cada mesinha própria) ganha filtros
+  por categoria de item e por item (só itens do próprio usuário), setas de
+  comparação com o período anterior e o botão "Lista de compras". Contas sem
+  a marca seguem no fluxo antigo (`movimentacoesDesde` + agregação local) e
+  não veem nada disso.
+- **Semântica das setas** (`Tendencia`): apontam para onde a métrica estava
+  no período ANTERIOR (↑ = era maior). Verde quando a tendência indica maior
+  saldo, vermelho quando indica menor — ex.: saldo maior no período anterior
+  = ↑ verde; slippage maior no período anterior = ↑ vermelho. A nota
+  `.nota-avancada` no topo explica isso e explicita que é recurso da
+  categoria.
+- **Reposição recomendada**: card exibido apenas quando o filtro atual
+  resulta em exatamente um item do usuário. O valor vem pronto do backend
+  (RPC); o método de cálculo é detalhe interno de lá — não descrever na UI.
+- **Lista de compras** (`/lista-compras?periodo=…&mesinha=…&categoria=…&item=…`):
+  página imprimível (mesmo padrão da folha A4/cardápio) com os itens do
+  usuário e a reposição recomendada, agrupada por mesinha quando aberta de
+  "Meus itens". Os parâmetros vêm dos filtros da seção de origem.
+
 ## Fluxo de autenticação
 
 - Cadastro envia `emailRedirectTo = window.location.origin` e, quando a
@@ -117,11 +149,29 @@ públicas; a `service_role` nunca entra no frontend.
   Supabase (*Authentication → URL Configuration*): deve ser
   `https://mesusp.netlify.app`, com `http://localhost:5173` nos Redirect URLs
   para desenvolvimento local.
+- **Trocar senha e e-mail** (aba Perfil, cartão "Segurança"):
+  `supabase.auth.updateUser`. A troca de e-mail só é efetivada depois dos
+  links de confirmação (vão para o e-mail novo e o atual); o backend espelha
+  o novo e-mail em `profiles.email` por gatilho.
+- **Esqueci minha senha** (página de login): `resetPasswordForEmail` com
+  `redirectTo = origin`. O link de recuperação cria a sessão e dispara o
+  evento `PASSWORD_RECOVERY`; o `AuthContext` liga `recuperandoSenha` e o
+  `App` mostra `RedefinirSenhaPage` até a senha ser trocada (ou o usuário
+  sair). Não é preciso cadastrar rota extra nos Redirect URLs.
 
 ## Armadilhas conhecidas
 
 - **Cache do service worker**: ao testar uma versão nova em aparelho que já
   abriu o site, recarregue a página para o SW atualizado assumir.
+- **Service worker engole o `page.route` do Playwright**: em testes de
+  navegador, as requisições ao Supabase passam pelo SW e a interceptação de
+  rede não as vê. Crie o contexto com `serviceWorkers: 'block'`.
+- **Front-end novo × backend antigo**: se o app referencia uma coluna que a
+  migração ainda não criou (ex.: `categorias.relatorios_avancados`), o
+  `select` do perfil falharia e o app ficaria preso em "Carregando…". Por
+  isso o embed usa `categorias(*)` e a flag é opcional no tipo — aplicar as
+  migrações antes do deploy continua sendo o certo, mas o app não quebra na
+  janela entre um e outro.
 - **Barra de navegação dos navegadores mobile cobrindo o fim da página**
   (parecia um "footer" cortando o conteúdo). Dois casos, duas defesas:
   1. *Páginas curtas*: `100vh` não conta a barra, então containers de tela
