@@ -17,6 +17,8 @@ interface EstadoAutenticacao {
   sessao: Session | null;
   perfil: Profile | null;
   carregando: boolean;
+  /** True enquanto o usuário chegou por um link de recuperação e ainda não redefiniu a senha. */
+  recuperandoSenha: boolean;
   entrar: (email: string, senha: string) => Promise<void>;
   /** Retorna true quando a conta foi criada mas ainda precisa de confirmação por e-mail. */
   cadastrar: (nome: string, email: string, senha: string) => Promise<boolean>;
@@ -24,6 +26,12 @@ interface EstadoAutenticacao {
   atualizarPerfil: (dados: { nome?: string; pix_key?: string | null }) => Promise<void>;
   /** Recarrega o perfil do banco (ex.: após arquivar/desarquivar a conta). */
   recarregarPerfil: () => Promise<void>;
+  /** Troca a senha da conta autenticada (também conclui a recuperação). */
+  trocarSenha: (novaSenha: string) => Promise<void>;
+  /** Pede a troca de e-mail; o Auth envia links de confirmação antes de efetivar. */
+  trocarEmail: (novoEmail: string) => Promise<void>;
+  /** Envia o e-mail de "esqueci minha senha" (não exige estar logado). */
+  recuperarSenha: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<EstadoAutenticacao | null>(null);
@@ -32,11 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessao, setSessao] = useState<Session | null>(null);
   const [perfil, setPerfil] = useState<Profile | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
 
   const carregarPerfil = useCallback(async (usuarioId: string) => {
+    // categorias(*) em vez de colunas explícitas: o perfil continua carregando
+    // mesmo se o frontend conhecer colunas que o backend ainda não tem.
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, categorias(id, nome, limite_mesinhas, limite_itens)')
+      .select('*, categorias(*)')
       .eq('id', usuarioId)
       .single();
     if (!error) setPerfil(data as Profile);
@@ -49,12 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCarregando(false);
     });
 
-    const { data: inscricao } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
+    const { data: inscricao } = supabase.auth.onAuthStateChange((evento, novaSessao) => {
+      // Link de "esqueci minha senha": a sessão nasce em modo de recuperação
+      // e o App mostra a tela de redefinição até a senha ser trocada.
+      if (evento === 'PASSWORD_RECOVERY') setRecuperandoSenha(true);
       setSessao(novaSessao);
       if (novaSessao) {
         void carregarPerfil(novaSessao.user.id);
       } else {
         setPerfil(null);
+        setRecuperandoSenha(false);
       }
     });
     return () => inscricao.subscription.unsubscribe();
@@ -104,9 +119,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (sessao) await carregarPerfil(sessao.user.id);
   }, [sessao, carregarPerfil]);
 
+  const trocarSenha = useCallback(async (novaSenha: string) => {
+    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    if (error) throw new Error(traduzirErroAuth(error.message));
+    setRecuperandoSenha(false);
+  }, []);
+
+  const trocarEmail = useCallback(async (novoEmail: string) => {
+    // O Auth envia links de confirmação (para o e-mail novo e o atual) e só
+    // efetiva a troca depois; o backend espelha em profiles.email por gatilho.
+    const { error } = await supabase.auth.updateUser(
+      { email: novoEmail },
+      { emailRedirectTo: window.location.origin },
+    );
+    if (error) throw new Error(traduzirErroAuth(error.message));
+  }, []);
+
+  const recuperarSenha = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw new Error(traduzirErroAuth(error.message));
+  }, []);
+
   const valor = useMemo(
-    () => ({ sessao, perfil, carregando, entrar, cadastrar, sair, atualizarPerfil, recarregarPerfil }),
-    [sessao, perfil, carregando, entrar, cadastrar, sair, atualizarPerfil, recarregarPerfil],
+    () => ({
+      sessao,
+      perfil,
+      carregando,
+      recuperandoSenha,
+      entrar,
+      cadastrar,
+      sair,
+      atualizarPerfil,
+      recarregarPerfil,
+      trocarSenha,
+      trocarEmail,
+      recuperarSenha,
+    }),
+    [
+      sessao,
+      perfil,
+      carregando,
+      recuperandoSenha,
+      entrar,
+      cadastrar,
+      sair,
+      atualizarPerfil,
+      recarregarPerfil,
+      trocarSenha,
+      trocarEmail,
+      recuperarSenha,
+    ],
   );
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>;
@@ -125,5 +189,11 @@ function traduzirErroAuth(mensagem: string): string {
   }
   if (mensagem.includes('already registered')) return 'Este e-mail já está cadastrado.';
   if (mensagem.includes('at least 6 characters')) return 'A senha deve ter ao menos 6 caracteres.';
+  if (mensagem.includes('different from the old password')) {
+    return 'A nova senha precisa ser diferente da senha atual.';
+  }
+  if (mensagem.includes('rate limit') || mensagem.includes('security purposes')) {
+    return 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente de novo.';
+  }
   return mensagem;
 }

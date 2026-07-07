@@ -14,13 +14,22 @@ const OPCOES_TEMA: { valor: PreferenciaTema; rotulo: string }[] = [
 ];
 
 export function PerfilPage() {
-  const { perfil, atualizarPerfil, recarregarPerfil, sair } = useAuth();
+  const { perfil, atualizarPerfil, recarregarPerfil, sair, trocarSenha, trocarEmail } = useAuth();
   const preferenciaTema = usePreferenciaTema();
   const [nome, setNome] = useState('');
   const [chavePix, setChavePix] = useState('');
   const [mensagem, setMensagem] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [mensagemConta, setMensagemConta] = useState<string | null>(null);
+
+  const [novoEmail, setNovoEmail] = useState('');
+  const [mensagemEmail, setMensagemEmail] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null);
+  const [trocandoEmail, setTrocandoEmail] = useState(false);
+
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState('');
+  const [mensagemSenha, setMensagemSenha] = useState<{ tipo: 'erro' | 'sucesso'; texto: string } | null>(null);
+  const [trocandoSenha, setTrocandoSenha] = useState(false);
 
   useEffect(() => {
     if (perfil) {
@@ -34,7 +43,7 @@ export function PerfilPage() {
     ? categoria.limite_mesinhas === null && categoria.limite_itens === null
       ? 'Sua conta não tem limite de mesinhas nem de itens.'
       : `Sua conta pode ter até ${categoria.limite_mesinhas ?? 'ilimitadas'} mesinhas e ${categoria.limite_itens ?? 'ilimitados'} itens.`
-    : 'Cada conta pode ter até 2 mesinhas e 20 itens.';
+    : 'Os limites de mesinhas e itens dependem da categoria da conta.';
 
   async function aoSalvar(evento: FormEvent) {
     evento.preventDefault();
@@ -47,6 +56,51 @@ export function PerfilPage() {
       setMensagem({ tipo: 'erro', texto: erro instanceof Error ? erro.message : String(erro) });
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function aoTrocarEmail(evento: FormEvent) {
+    evento.preventDefault();
+    setMensagemEmail(null);
+    const email = novoEmail.trim();
+    if (email.toLowerCase() === (perfil?.email ?? '').toLowerCase()) {
+      setMensagemEmail({ tipo: 'erro', texto: 'Este já é o e-mail atual da conta.' });
+      return;
+    }
+    setTrocandoEmail(true);
+    try {
+      await trocarEmail(email);
+      setNovoEmail('');
+      setMensagemEmail({
+        tipo: 'sucesso',
+        texto:
+          `Enviamos links de confirmação para ${email} e para o e-mail atual. ` +
+          'A troca só é efetivada depois da confirmação (confira também o spam).',
+      });
+    } catch (erro) {
+      setMensagemEmail({ tipo: 'erro', texto: erro instanceof Error ? erro.message : String(erro) });
+    } finally {
+      setTrocandoEmail(false);
+    }
+  }
+
+  async function aoTrocarSenha(evento: FormEvent) {
+    evento.preventDefault();
+    setMensagemSenha(null);
+    if (novaSenha !== confirmacaoSenha) {
+      setMensagemSenha({ tipo: 'erro', texto: 'As senhas digitadas não são iguais.' });
+      return;
+    }
+    setTrocandoSenha(true);
+    try {
+      await trocarSenha(novaSenha);
+      setNovaSenha('');
+      setConfirmacaoSenha('');
+      setMensagemSenha({ tipo: 'sucesso', texto: 'Senha alterada com sucesso.' });
+    } catch (erro) {
+      setMensagemSenha({ tipo: 'erro', texto: erro instanceof Error ? erro.message : String(erro) });
+    } finally {
+      setTrocandoSenha(false);
     }
   }
 
@@ -95,6 +149,76 @@ export function PerfilPage() {
 
           <button type="submit" className="botao" disabled={salvando}>
             {salvando ? 'Salvando…' : 'Salvar'}
+          </button>
+        </form>
+      </div>
+
+      <div className="cartao" style={{ maxWidth: 480, marginTop: '1rem' }}>
+        <h2>Segurança</h2>
+
+        <form className="formulario" onSubmit={(e) => void aoTrocarEmail(e)}>
+          <div className="campo">
+            <label htmlFor="novo-email">Trocar e-mail</label>
+            <input
+              id="novo-email"
+              type="email"
+              value={novoEmail}
+              onChange={(e) => setNovoEmail(e.target.value)}
+              placeholder={perfil?.email}
+              required
+              autoComplete="email"
+            />
+            <p className="subtitulo" style={{ fontSize: '0.82rem' }}>
+              Você recebe links de confirmação no e-mail novo e no atual; a troca só vale depois
+              de confirmada.
+            </p>
+          </div>
+          {mensagemEmail && (
+            <p className={mensagemEmail.tipo === 'erro' ? 'mensagem-erro' : 'mensagem-sucesso'}>
+              {mensagemEmail.texto}
+            </p>
+          )}
+          <button type="submit" className="botao botao-secundario" disabled={trocandoEmail}>
+            {trocandoEmail ? 'Enviando…' : 'Trocar e-mail'}
+          </button>
+        </form>
+
+        <form
+          className="formulario"
+          style={{ marginTop: '1.25rem' }}
+          onSubmit={(e) => void aoTrocarSenha(e)}
+        >
+          <div className="campo">
+            <label htmlFor="nova-senha">Nova senha</label>
+            <input
+              id="nova-senha"
+              type="password"
+              value={novaSenha}
+              onChange={(e) => setNovaSenha(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
+          </div>
+          <div className="campo">
+            <label htmlFor="confirmar-senha">Confirmar nova senha</label>
+            <input
+              id="confirmar-senha"
+              type="password"
+              value={confirmacaoSenha}
+              onChange={(e) => setConfirmacaoSenha(e.target.value)}
+              required
+              minLength={6}
+              autoComplete="new-password"
+            />
+          </div>
+          {mensagemSenha && (
+            <p className={mensagemSenha.tipo === 'erro' ? 'mensagem-erro' : 'mensagem-sucesso'}>
+              {mensagemSenha.texto}
+            </p>
+          )}
+          <button type="submit" className="botao botao-secundario" disabled={trocandoSenha}>
+            {trocandoSenha ? 'Salvando…' : 'Trocar senha'}
           </button>
         </form>
       </div>

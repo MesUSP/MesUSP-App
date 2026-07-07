@@ -14,6 +14,7 @@ import { ImprimirQrPage } from './pages/ImprimirQrPage';
 import { ImpressaoPage } from './pages/ImpressaoPage';
 import { GoogleCallbackPage } from './pages/GoogleCallbackPage';
 import { DesenvolvedorPage } from './pages/DesenvolvedorPage';
+import { RedefinirSenhaPage } from './pages/RedefinirSenhaPage';
 
 interface Rota {
   padrao: string;
@@ -43,7 +44,7 @@ const ROTAS: Rota[] = [
 
 export function App() {
   const { caminho } = useRoteador();
-  const { sessao, perfil, carregando, sair } = useAuth();
+  const { sessao, perfil, carregando, recuperandoSenha, sair } = useAuth();
 
   for (const rota of ROTAS) {
     const parametros = corresponderRota(rota.padrao, caminho);
@@ -60,6 +61,10 @@ export function App() {
       );
     }
     if (!sessao) return <LoginPage />;
+
+    // Chegada pelo link de "esqueci minha senha": só sai daqui redefinindo
+    // a senha (ou saindo da sessão de recuperação).
+    if (recuperandoSenha) return <RedefinirSenhaPage />;
 
     // Rotas exclusivas de desenvolvedor não existem para as demais categorias.
     if (rota.somenteDesenvolvedor) {
