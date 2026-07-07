@@ -81,7 +81,6 @@ export function MesinhaPage({ id }: { id: string }) {
           <p className="subtitulo">{mesinha.descricao || 'Sem descrição.'}</p>
         </div>
         <div className="linha-flex">
-          <span className="etiqueta">{mesinha.tipo}</span>
           {!mesinha.ativo && <span className="etiqueta etiqueta-alerta">desativada</span>}
           {mesinha.status === 'arquivada' && (
             <span className="etiqueta etiqueta-erro">arquivada</span>
@@ -111,7 +110,6 @@ export function MesinhaPage({ id }: { id: string }) {
           mesinha={mesinha}
           listagens={listagens}
           usuarioId={usuarioId ?? ''}
-          souProprietario={souProprietario}
           aoAtualizar={carregar}
         />
       )}
@@ -139,13 +137,11 @@ function AbaItens({
   mesinha,
   listagens,
   usuarioId,
-  souProprietario,
   aoAtualizar,
 }: {
   mesinha: Mesinha;
   listagens: Listagem[];
   usuarioId: string;
-  souProprietario: boolean;
   aoAtualizar: () => Promise<void>;
 }) {
   const [meusItens, setMeusItens] = useState<Item[]>([]);
@@ -154,12 +150,10 @@ function AbaItens({
   const [mensagem, setMensagem] = useState<Mensagem | null>(null);
   const [adicionando, setAdicionando] = useState(false);
 
-  const podeAdicionar = souProprietario || mesinha.tipo === 'descentralizada';
-
   useEffect(() => {
-    if (!podeAdicionar || !usuarioId) return;
+    if (!usuarioId) return;
     void listarMeusItens(usuarioId).then(setMeusItens).catch(() => setMeusItens([]));
-  }, [podeAdicionar, usuarioId]);
+  }, [usuarioId]);
 
   const jaListados = new Set(listagens.map((l) => l.item_id));
   const disponiveis = meusItens.filter((item) => !jaListados.has(item.id));
@@ -193,62 +187,54 @@ function AbaItens({
 
   return (
     <>
-      {podeAdicionar && (
-        <div className="cartao" style={{ marginBottom: '1rem' }}>
-          <h2>Adicionar item à mesinha</h2>
-          {disponiveis.length === 0 ? (
-            <p className="subtitulo">
-              Todos os seus itens já estão listados aqui. Cadastre novos itens em{' '}
-              <Link para="/itens">Meus itens</Link>.
-            </p>
-          ) : (
-            <form className="formulario" onSubmit={(e) => void aoAdicionar(e)}>
-              <div className="formulario-linha">
-                <div className="campo">
-                  <label htmlFor="item-listar">Item</label>
-                  <select
-                    id="item-listar"
-                    value={itemId}
-                    onChange={(e) => setItemId(e.target.value)}
-                    required
-                  >
-                    <option value="">Selecione…</option>
-                    {disponiveis.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="campo">
-                  <label htmlFor="preco-listar">Preço de venda (R$)</label>
-                  <input
-                    id="preco-listar"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={preco}
-                    onChange={(e) => setPreco(e.target.value)}
-                    required
-                  />
-                </div>
+      <div className="cartao" style={{ marginBottom: '1rem' }}>
+        <h2>Adicionar item à mesinha</h2>
+        {disponiveis.length === 0 ? (
+          <p className="subtitulo">
+            Todos os seus itens já estão listados aqui. Cadastre novos itens em{' '}
+            <Link para="/itens">Meus itens</Link>.
+          </p>
+        ) : (
+          <form className="formulario" onSubmit={(e) => void aoAdicionar(e)}>
+            <div className="formulario-linha">
+              <div className="campo">
+                <label htmlFor="item-listar">Item</label>
+                <select
+                  id="item-listar"
+                  value={itemId}
+                  onChange={(e) => setItemId(e.target.value)}
+                  required
+                >
+                  <option value="">Selecione…</option>
+                  {disponiveis.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.nome}
+                    </option>
+                  ))}
+                </select>
               </div>
-              {mensagem && <p className="mensagem-erro">{mensagem.texto}</p>}
-              <div>
-                <button type="submit" className="botao" disabled={adicionando}>
-                  {adicionando ? 'Adicionando…' : 'Listar item'}
-                </button>
+              <div className="campo">
+                <label htmlFor="preco-listar">Preço de venda (R$)</label>
+                <input
+                  id="preco-listar"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={preco}
+                  onChange={(e) => setPreco(e.target.value)}
+                  required
+                />
               </div>
-            </form>
-          )}
-        </div>
-      )}
-
-      {!podeAdicionar && (
-        <p className="subtitulo" style={{ marginBottom: '1rem' }}>
-          Esta mesinha é centralizada: apenas o proprietário gerencia os itens.
-        </p>
-      )}
+            </div>
+            {mensagem && <p className="mensagem-erro">{mensagem.texto}</p>}
+            <div>
+              <button type="submit" className="botao" disabled={adicionando}>
+                {adicionando ? 'Adicionando…' : 'Listar item'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
 
       {ativas.length === 0 ? (
         <div className="cartao">
@@ -505,7 +491,6 @@ function AbaConfiguracoes({
 }) {
   const { navegar } = useRoteador();
   const [nome, setNome] = useState(mesinha.nome);
-  const [tipo, setTipo] = useState(mesinha.tipo);
   const [descricao, setDescricao] = useState(mesinha.descricao);
   const [planilhaId, setPlanilhaId] = useState(mesinha.planilha_id ?? '');
   const [mensagem, setMensagem] = useState<Mensagem | null>(null);
@@ -547,7 +532,6 @@ function AbaConfiguracoes({
       () =>
         atualizarMesinha(mesinha.id, {
           nome: nome.trim(),
-          tipo,
           descricao: descricao.trim(),
         }),
       'Mesinha atualizada.',
@@ -589,27 +573,14 @@ function AbaConfiguracoes({
       <div className="cartao">
         <h2>Dados da mesinha</h2>
         <form className="formulario" onSubmit={(e) => void aoSalvar(e)}>
-          <div className="formulario-linha">
-            <div className="campo">
-              <label htmlFor="editar-nome">Nome</label>
-              <input
-                id="editar-nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-              />
-            </div>
-            <div className="campo">
-              <label htmlFor="editar-tipo">Tipo</label>
-              <select
-                id="editar-tipo"
-                value={tipo}
-                onChange={(e) => setTipo(e.target.value as Mesinha['tipo'])}
-              >
-                <option value="descentralizada">Descentralizada</option>
-                <option value="centralizada">Centralizada</option>
-              </select>
-            </div>
+          <div className="campo">
+            <label htmlFor="editar-nome">Nome</label>
+            <input
+              id="editar-nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              required
+            />
           </div>
           <div className="campo">
             <label htmlFor="editar-descricao">Localização ou descrição</label>

@@ -19,7 +19,7 @@ export function ImpressaoPage() {
     if (!sessao) return;
     supabase
       .from('listagens')
-      .select('*, itens(nome, categoria, descricao), mesinhas(nome, tipo)')
+      .select('*, itens(nome, categoria, descricao), mesinhas(nome)')
       .eq('dono_id', sessao.user.id)
       .eq('status', 'ativa')
       .order('criado_em')

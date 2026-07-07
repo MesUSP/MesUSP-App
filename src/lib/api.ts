@@ -17,7 +17,6 @@ import type {
   ReconciliacaoListagem,
   Reposicao,
   ResumoRelatorio,
-  TipoMesinha,
   UsuarioAdmin,
   Venda,
 } from '../types';
@@ -48,7 +47,6 @@ export async function obterMesinha(id: string): Promise<Mesinha> {
 
 export async function criarMesinha(dados: {
   nome: string;
-  tipo: TipoMesinha;
   descricao: string;
   proprietario_id: string;
 }): Promise<Mesinha> {
@@ -58,7 +56,7 @@ export async function criarMesinha(dados: {
 
 export async function atualizarMesinha(
   id: string,
-  dados: Partial<Pick<Mesinha, 'nome' | 'tipo' | 'descricao' | 'ativo' | 'status' | 'planilha_id'>>,
+  dados: Partial<Pick<Mesinha, 'nome' | 'descricao' | 'ativo' | 'status' | 'planilha_id'>>,
 ): Promise<void> {
   const { error } = await supabase.from('mesinhas').update(dados).eq('id', id);
   if (error) throw new Error(error.message);
@@ -155,7 +153,7 @@ export async function listarListagensDaMesinha(mesinhaId: string): Promise<Lista
 export async function obterListagem(id: string): Promise<Listagem> {
   const { data, error } = await supabase
     .from('listagens')
-    .select('*, itens(nome, categoria, descricao), mesinhas(nome, tipo), profiles(nome)')
+    .select('*, itens(nome, categoria, descricao), mesinhas(nome), profiles(nome)')
     .eq('id', id)
     .single();
   return garantir(data, error) as Listagem;

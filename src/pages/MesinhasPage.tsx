@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { criarMesinha, listarMesinhas } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Link } from '../router';
-import type { Mesinha, TipoMesinha } from '../types';
+import type { Mesinha } from '../types';
 
 export function MesinhasPage() {
   const { sessao, perfil } = useAuth();
@@ -11,7 +11,6 @@ export function MesinhasPage() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
   const [nome, setNome] = useState('');
-  const [tipo, setTipo] = useState<TipoMesinha>('descentralizada');
   const [descricao, setDescricao] = useState('');
   const [criando, setCriando] = useState(false);
 
@@ -35,7 +34,6 @@ export function MesinhasPage() {
     try {
       await criarMesinha({
         nome: nome.trim(),
-        tipo,
         descricao: descricao.trim(),
         proprietario_id: sessao.user.id,
       });
@@ -85,28 +83,15 @@ export function MesinhasPage() {
         <div className="cartao" style={{ marginBottom: '1rem' }}>
           <h2>Nova mesinha</h2>
           <form className="formulario" onSubmit={(e) => void aoCriar(e)}>
-            <div className="formulario-linha">
-              <div className="campo">
-                <label htmlFor="nome-mesinha">Nome</label>
-                <input
-                  id="nome-mesinha"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                  placeholder="Mesinha do CAMat"
-                />
-              </div>
-              <div className="campo">
-                <label htmlFor="tipo-mesinha">Tipo</label>
-                <select
-                  id="tipo-mesinha"
-                  value={tipo}
-                  onChange={(e) => setTipo(e.target.value as TipoMesinha)}
-                >
-                  <option value="descentralizada">Descentralizada — vários vendedores</option>
-                  <option value="centralizada">Centralizada — só o proprietário vende</option>
-                </select>
-              </div>
+            <div className="campo">
+              <label htmlFor="nome-mesinha">Nome</label>
+              <input
+                id="nome-mesinha"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                required
+                placeholder="Mesinha do CAMat"
+              />
             </div>
             <div className="campo">
               <label htmlFor="descricao-mesinha">Localização ou descrição</label>
@@ -185,7 +170,6 @@ function CartaoMesinha({ mesinha, usuarioId }: { mesinha: Mesinha; usuarioId?: s
         {mesinha.descricao || 'Sem descrição.'}
       </p>
       <div className="linha-flex">
-        <span className="etiqueta">{mesinha.tipo}</span>
         {!mesinha.ativo && <span className="etiqueta etiqueta-alerta">desativada</span>}
         {mesinha.status === 'arquivada' && <span className="etiqueta etiqueta-erro">arquivada</span>}
       </div>

@@ -49,13 +49,10 @@ export interface UsuarioAdmin {
   criado_em: string;
 }
 
-export type TipoMesinha = 'centralizada' | 'descentralizada';
-
 export interface Mesinha {
   id: string;
   proprietario_id: string;
   nome: string;
-  tipo: TipoMesinha;
   descricao: string;
   latitude: number | null;
   longitude: number | null;
@@ -102,7 +99,7 @@ export interface Listagem {
   status: 'ativa' | 'arquivada' | 'removida';
   criado_em: string;
   itens?: Pick<Item, 'nome' | 'categoria' | 'descricao'>;
-  mesinhas?: Pick<Mesinha, 'nome' | 'tipo'>;
+  mesinhas?: Pick<Mesinha, 'nome'>;
   profiles?: Pick<Profile, 'nome'>;
 }
 
@@ -148,7 +145,6 @@ export interface Perda {
 export interface CardapioMesinha {
   id: string;
   nome: string;
-  tipo: TipoMesinha;
   descricao: string;
   latitude: number | null;
   longitude: number | null;

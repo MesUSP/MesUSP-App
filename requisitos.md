@@ -21,14 +21,9 @@ O sistema atende centros acadêmicos, grupos de extensão e atléticas, permitin
 
 ## 2. Conceitos de domínio
 
-### 2.1 Tipos de mesinha
+### 2.1 Mesinhas e vendedores
 
-A plataforma deve suportar dois tipos de mesinha:
-
-* **Centralizada:** uma única pessoa ou instituição controla todos os itens.
-* **Descentralizada:** vários colaboradores adicionam e controlam seus próprios itens dentro da mesma mesinha.
-
-Em mesinhas descentralizadas, cada vendedor deve controlar de forma independente o estoque, os preços e as vendas dos próprios itens.
+Toda mesinha comporta um ou mais vendedores: o proprietário e os colaboradores que ele convidar. Cada vendedor controla de forma independente o estoque, os preços e as vendas dos próprios itens. (A distinção original entre mesinhas "centralizadas" e "descentralizadas" foi eliminada em julho de 2026 por não ter impacto na funcionalidade.)
 
 ### 2.2 Itens e listagens
 
@@ -70,11 +65,11 @@ Os dados devem ser separados por item: cada vendedor só pode acessar e editar i
 
 ### 4.2 Mesinhas
 
-* **RF-TABLE-01** O proprietário deve poder criar uma mesinha, informando nome, tipo e localização ou descrição.
+* **RF-TABLE-01** O proprietário deve poder criar uma mesinha, informando nome e localização ou descrição.
 * **RF-TABLE-02** O proprietário deve poder editar, desativar ou arquivar uma mesinha.
 * **RF-TABLE-03** Uma mesinha deve conter itens por meio de listagens e possuir exatamente um proprietário.
-* **RF-TABLE-04** Em uma mesinha centralizada, apenas o proprietário controla os itens.
-* **RF-TABLE-05** Em uma mesinha descentralizada, múltiplos colaboradores controlam seus próprios itens de forma independente.
+* **RF-TABLE-04** *(removido em jul/2026)* A distinção entre mesinhas centralizadas e descentralizadas foi eliminada.
+* **RF-TABLE-05** Múltiplos colaboradores controlam seus próprios itens de forma independente em qualquer mesinha.
 
 ### 4.3 Colaboradores
 
@@ -157,7 +152,7 @@ estoque atual = reposições − vendas − perdas registradas − slippage
 ## 6. Modelo de dados proposto
 
 * **`profiles`**: `id`, `nome`, `pix_key`, `criado_em`.
-* **`mesinhas`**: `id`, `proprietario_id`, `nome`, `tipo`, `descricao`, `latitude`, `longitude`, `ativo`, `criado_em`.
+* **`mesinhas`**: `id`, `proprietario_id`, `nome`, `descricao`, `latitude`, `longitude`, `ativo`, `criado_em`.
 * **`mesinha_membros`**: `mesinha_id`, `usuario_id`, `papel`, `status`, `criado_em`.
 * **`itens`**: `id`, `dono_id`, `nome`, `categoria`, `descricao`, `foto_url`.
 * **`listagens`**: `id`, `item_id`, `mesinha_id`, `dono_id`, `preco_atual`, `estoque_atual`, `status`, `criado_em`.
