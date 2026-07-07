@@ -15,6 +15,7 @@ import { ImpressaoPage } from './pages/ImpressaoPage';
 import { GoogleCallbackPage } from './pages/GoogleCallbackPage';
 import { DesenvolvedorPage } from './pages/DesenvolvedorPage';
 import { RedefinirSenhaPage } from './pages/RedefinirSenhaPage';
+import { ListaComprasPage } from './pages/ListaComprasPage';
 
 interface Rota {
   padrao: string;
@@ -31,6 +32,7 @@ const ROTAS: Rota[] = [
   { padrao: '/itens', render: () => <ItensPage /> },
   { padrao: '/desenvolvedor', somenteDesenvolvedor: true, render: () => <DesenvolvedorPage /> },
   { padrao: '/relatorios', render: () => <RelatoriosPage /> },
+  { padrao: '/lista-compras', render: () => <ListaComprasPage /> },
   { padrao: '/impressao', render: () => <ImpressaoPage /> },
   { padrao: '/mesinhas/:id', render: (p) => <MesinhaPage id={p.id} /> },
   { padrao: '/mesinhas/:id/imprimir-qr', render: (p) => <ImprimirQrPage id={p.id} /> },
